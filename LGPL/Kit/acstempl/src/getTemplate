@@ -7,7 +7,7 @@
 # who        when      what
 # --------  ----------  ----------------------------------------------
 # psivera   2000-10-07  created
-#
+# lepizarr  2016-09-06  Removed need for xterm
 
 #************************************************************************
 #   NAME
@@ -37,7 +37,6 @@
 #   EDITOR   <IN>  if defined, a "$EDITOR <file> &" is spawned automatically
 #
 #   RETURN VALUES
-# 
 #
 #   CAUTIONS
 #
@@ -47,12 +46,10 @@
 #
 #   BUGS
 #------------------------------------------------------------------------
+# Use env var in /etc/ to avoid user sourcing
+. /etc/acscb/bash_profile.acs
 
-XTERM=" xterm -ls -sb -geometry 80x40 "
-TITLE=" \" ACS SOFTWARE - TEMPLATES \" "
-COMMAND=" -e getTemplateMainMenu"
-
-$XTERM -title "$TITLE" $COMMAND &
-echo "Connecting Archive .\c";  sleep 1; echo " .\c"; sleep 1; echo " ."
+./getTemplateMainMenu  
+#echo "Connecting Archive .\c";  sleep 1; echo " .\c"; sleep 1; echo " ."
 
 # ___oOo___
