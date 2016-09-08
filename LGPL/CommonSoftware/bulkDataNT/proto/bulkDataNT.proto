@@ -1,0 +1,39 @@
+/* Original IDL
+#ifndef _BD_DDS_IDL
+#define _BD_DDS_IDL
+
+module ACSBulkData {
+    typedef unsigned long DataType;
+	
+	const unsigned long FRAME_MAX_LEN = 64000;
+	
+	const DataType BD_PARAM=0; //start
+	const DataType BD_DATA=1;  // data
+	const DataType BD_STOP=2;  //stop
+	
+
+	struct BulkDataNTFrame{
+	// data type: parameter or real data
+	    DataType typeOfdata;
+	// just for data rest data length, how many chunks do we still have to get 
+	    unsigned long restDataLength;
+	        
+		sequence<octet, FRAME_MAX_LEN> data;
+	};
+
+};
+#endif
+*/
+
+syntax = "proto3";
+
+package ACSBulkData;
+
+option java_package = "alma";
+option java_outer_classname = "ACSBulkData";
+
+message {
+
+}
+
+
