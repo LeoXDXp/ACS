@@ -1,4 +1,4 @@
-#! /bin/ksh -f
+#! /bin/bash
 . acsstartupAcsPorts
 . acsstartupConstants # Import ACS error codes
 #*******************************************************************************
