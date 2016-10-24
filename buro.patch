@@ -1,0 +1,44 @@
+-import si.ijs.maci.ClientPOA;
++import si.ijs.maci.AdministratorPOA;
+
+-       private class ClientImpl extends ClientPOA {
++       private class ClientImpl extends AdministratorPOA {
+
+
+Setear en AuthenticationData que seremos un administrador
+                AuthenticationData ret = new AuthenticationData(
+                                "C",
+-                               ClientType.CLIENT_TYPE,
++                               ClientType.ADMINISTRATOR_TYPE,
+                                ImplLangType.JAVA,
+                                false,
+                                startTimeUTClong,
+                                executionId);
+
+Implementar los métodos de monitoreo del cambio estado de
+clientes/contrainers/componentes que necesiten:
+
++               //Administrator methods
++               public void client_logged_in(si.ijs.maci.ClientInfo
+info, long timestamp, long execution_id) {
++               }
++               public void client_logged_out(int h, long timestamp) {
++               }
++               public void
+container_logged_in(si.ijs.maci.ContainerInfo info, long timestamp, long
+execution_id) {
++               }
++               public void container_logged_out(int h, long timestamp) {
++               }
++               public void components_requested(int[] clients, int[]
+components, long timestamp) {
++               }
++               public void components_released(int[] clients, int[]
+components, long timestamp) {
++               }
++               public void
+component_activated(si.ijs.maci.ComponentInfo info, long timestamp, long
+execution_id) {
++               }
++               public void component_deactivated(int h, long timestamp) {
++               }
