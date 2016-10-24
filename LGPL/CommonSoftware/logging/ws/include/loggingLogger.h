@@ -304,6 +304,7 @@ namespace Logging
 	 */
 	std::list<Handler::HandlerSmartPtr> handlers_m;
 
+	public:
         class Logger_ptr{
                 public:
                         Logger_ptr(){globalLogger_m=(Logger *)0;anonymousLogger_m=(Logger *)0;staticLogger_m=(Logger *)0;}
@@ -329,7 +330,8 @@ namespace Logging
                          */
                         LoggerList loggers_m;
         };
-
+	private:
+	
 	/**
 	 * mutex which guards the loggers lost making this class completely
 	 * thread-safe
