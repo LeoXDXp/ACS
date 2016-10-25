@@ -573,6 +573,10 @@ then
         then
             JAVA_HOME="/usr/lib/jvm/java-8-openjdk-i386"
         fi
+    # Java 1.8 OpenJDK for CentOS 7
+    elif [ "$(uname -a | grep \.el7\.)" ]
+    then
+	JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk "
     else
       	JAVA_HOME=/usr/java/default
     fi
