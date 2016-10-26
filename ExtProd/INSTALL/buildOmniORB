@@ -120,20 +120,19 @@ NUM_CPU=`grep -c processor  /proc/cpuinfo`
 #
 # Notes: See omniORBpy/ReleaseNote for help
 #
-OmORBpy_ver="-4.2.0"
-if [ ! -e ../PRODUCTS/omniORBpy$OmORBpy_ver\.tar.bz2 ]
+if [ ! -e ../PRODUCTS/omniORBpy-4.2.0.tar.bz2 ]
 then
   echo Error: omniORBpy-4.2 sources are missing
   exit 2
 fi
 
 cd ../PRODUCTS
-tar -jvxf omniORBpy$OmORBpy_ver\.tar.bz2 -C $OMNI_ROOT/src/lib/
+tar -jxf omniORBpy-4.2.0.tar.bz2 -C $OMNI_ROOT/src/lib/
 
 cp omniORB-patches/CosProperty.idl $OMNI_ROOT/idl/COS
 
 mkdir -p $OMNI_ROOT/src/lib/
-mv $OMNI_ROOT/src/lib/omniORBpy$OmORBpy_ver $OMNI_ROOT/src/lib/omniORBpy
+mv $OMNI_ROOT/src/lib/omniORBpy-4.2.0 $OMNI_ROOT/src/lib/omniORBpy
 cd $OMNI_ROOT/src/lib/omniORBpy
 mkdir -p build
 cd build
