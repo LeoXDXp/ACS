@@ -744,10 +744,10 @@ then
 		then
       			M2_HOME=$ALMASW_INSTDIR/maven
 		fi
-	# Centos 7 use system maven
+	# Centos 7 use system maven. 
 	elif [ "$(uname -a | grep \.el7\.)" ] 
 	then
-		M2_HOME="/usr/share/apache-maven"
+		: #M2_HOME="/usr/share/apache-maven"
 	else
 		M2_HOME=$ALMASW_INSTDIR/maven
 	fi
