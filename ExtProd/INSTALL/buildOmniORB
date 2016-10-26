@@ -128,7 +128,7 @@ then
 fi
 
 cd ../PRODUCTS
-tar -jxf omniORBpy$OmORBpy_ver\.tar.gz -C $OMNI_ROOT/src/lib
+tar -jxf omniORBpy$OmORBpy_ver\.tar.bz2 -C $OMNI_ROOT/src/lib
 
 cp omniORB-patches/CosProperty.idl $OMNI_ROOT/idl/COS
 
