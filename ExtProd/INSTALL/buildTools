@@ -55,6 +55,13 @@ else
 	UBDIST="Other"
 fi
 
+if [ $(uname -a | grep "\.el7\.") ]
+then
+	CENTOS="el7"
+else
+	CENTOS="Other"
+fi
+
 #
 # No INTROOT please!
 #
@@ -188,23 +195,24 @@ else
   bash --login ./buildTAO &>/dev/null &&  echo_success || echo_failure
 fi
 
-echo -n "buildDDS"
-./buildDDS  &&  echo_success || echo_failure
-echo -n "buildOpenSpliceDDS"
-if [ "$OS" = "$CYGWIN_VER" ]; then
-  ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
-else
-  bash --login ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
-fi
+#echo -n "buildDDS"
+#./buildDDS  &&  echo_success || echo_failure
+#echo -n "buildOpenSpliceDDS"
+#if [ "$OS" = "$CYGWIN_VER" ]; then
+#  ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
+#else
+#  bash --login ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
+#fi
 
-#Dont Maven on ubuntu
-if  [  "$UBDIST" != "Ubuntu" ]
+#Dont (apache) Maven on ubuntu or Centos7
+if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
 then
 	echo -n "buildMaven"
 	./buildMaven && echo_success || echo_failure
 fi
 
-if  [  "$UBDIST" != "Ubuntu" ]
+# Don build Ant on Ubuntu or Centos7
+if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
 then
 	echo -n "buildAnt"
 	./buildAnt && echo_success || echo_failure
@@ -221,16 +229,20 @@ then
 	echo -n "buildPyModules"
 	./buildPyModules && echo_success || echo_failure
 fi
-echo -n "buildOmniORB"
-./buildOmniORB && echo_success || echo_failure
+
+if [ "$CENTOS" != "el7" ]
+then
+	echo -n "buildOmniORB"
+	./buildOmniORB && echo_success || echo_failure
+fi
 #TODO remove mico build and also the mico files from cvs,
 # once we are sure that TAO IFR will supersede mico even for acsMakefile checks.
-echo -n "buildMico"
-./buildMico && echo_success || echo_failure
+#echo -n "buildMico"
+#./buildMico && echo_success || echo_failure
 echo -n "buildEclipse"
 ./buildEclipse && echo_success || echo_failure
 
-if  [  "$UBDIST" != "Ubuntu" ]
+if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
 then
 	echo -n "buildBoost"
 	./buildBoost && echo_success || echo_failure
