@@ -270,7 +270,7 @@ void AlarmenumpropEventStrategy<T, ROT, AlarmT>::destroy ()
 		ACS_LOG(LM_RUNTIME_CONTEXT, "AlarmenumpropEventStrategy::destroy",
 			(LM_ERROR, "Failed to destroy CORBA object"));
       } else {
-                CORBA::release(reference_mp);
+        CORBA::release(reference_mp);
       }
     }
 }
