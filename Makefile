@@ -14,27 +14,15 @@ os     = $(shell uname)
 
 MODULE_PREFIX = LGPL
 #!#MODULES_KIT = vlt doc acs acstempl
-MODULES_KIT = doc acs acstempl
+MODULES_KIT = doc acs acstempl acsutilpy
+
+MODULES_TOOLS = Tools
 #
 # I skip doxygen, that should be after compat and before tat,
 # because it is already built in the prepare phase.
 #
-GMP = gmp
 
-ifeq ($(os),Linux)
-  majorRelNo :=  $(basename $(shell cat /etc/redhat-release | awk '{print $$(NF-1)}'))
-  ifeq ($(majorRelNo),6)
-    GMP =
-  endif
-  ubuntuDist:= $(basename $(shell (lsb_release -d | awk '{print $2}')))
-  ifneq (,$(findstring Ubuntu,$(ubuntuDist)))
-   GMP =
-  endif
-endif
-
-MODULES_TOOLS = tat expat loki extjars antlr hibernate extpy cppunit getopt FITS astyle swig xercesc xercesj castor $(GMP) gui xsddoc extidl vtd-xml oAW shunit2 log4cpp scxml_apache
-
-MODULES_ACS = jacsutil xmljbind xmlpybind acserridl acsidlcommon acsutilpy acsutil acsstartup loggingidl logging acserr acserrTypes acsQoS acsthread acscomponentidl cdbidl maciidl baciidl acsncidl acsjlog repeatGuard loggingts loggingtsTypes jacsutil2 cdb cdbChecker codegen cdb_rdb acsalarmidl acsalarm acsContainerServices acscomponent recovery basenc archiveevents parameter baci enumprop acscallbacks acsdaemonidl jacsalarm jmanager maci task acstime acsnc acsncdds acsdaemon acslog acstestcompcpp acsexmpl jlogEngine acspycommon acsalarmpy acspy comphelpgen XmlIdl define acstestentities jcont jcontnc nsStatisticsService jacsalarmtest jcontexmpl jbaci monitoring acssamp mastercomp acspyexmpl nctest acscommandcenter acssim bulkDataNT bulkData containerTests acscourse ACSLaser acsGUIs
+MODULES_ACS = jacsutil xmljbind xmlpybind acserridl acsidlcommon acsutil acsstartup loggingidl logging acserr acserrTypes acsQoS acsthread acscomponentidl cdbidl maciidl baciidl acsncidl acsjlog repeatGuard loggingts loggingtsTypes jacsutil2 cdb cdbChecker codegen cdb_rdb acsalarmidl acsalarm acsContainerServices acscomponent recovery basenc archiveevents parameter baci enumprop acscallbacks acsdaemonidl jacsalarm jmanager maci task acstime acsnc acsdaemon acslog acstestcompcpp acsexmpl jlogEngine acspycommon acsalarmpy acspy comphelpgen XmlIdl define acstestentities jcont jcontnc nsStatisticsService jacsalarmtest jcontexmpl jbaci monitoring acssamp mastercomp acspyexmpl nctest acscommandcenter acssim bulkDataNT bulkData containerTests acscourse ACSLaser acsGUIs
 ######## end Modules ###########################
 
 ###############################################
@@ -45,7 +33,7 @@ define makeIt
 endef
 
 define makeItAux
-   (( make $(MAKE_FLAGS) -C $1 $2 2>&1 ) || ( echo "### ==> FAILED $2 ! " | tee -a $3 $4 1>&2 )) | tee -a $3 $4 >/dev/null;
+   (( $(MAKE) $(MAKE_FLAGS) -C $1 $2 2>&1 ) || ( echo "### ==> FAILED $2 ! " | tee -a $3 $4 1>&2 )) | tee -a $3 $4 >/dev/null;
 endef
 
 # SCM tag definition
@@ -95,7 +83,7 @@ ifeq ($(VXWORKS_RTOS) $(HAS_VW),YES TRUE)
 endif
 
 MODULES =  $(foreach kit, $(MODULES_KIT), $(MODULE_PREFIX)/Kit/$(kit)) \
-           $(foreach tools, $(MODULES_TOOLS), $(MODULE_PREFIX)/Tools/$(tools)) \
+           $(MODULE_PREFIX)/Tools \
            $(foreach acs, $(MODULES_ACS), $(MODULE_PREFIX)/CommonSoftware/$(acs)) \
 	   $(foreach bm, $(MODULES_BENCHMARK), Benchmark/$(bm)) \
            $(foreach nolgpl, $(MODULES_NO-LGPL), $(MODULE_PREFIX_NO-LGPL)/$(nolgpl)) \
@@ -289,7 +277,7 @@ update:	scm-tag checkModuleTree
 			 $(call makeItAux,$${member}/ws/src,install,build.log,$${member}/ws/src/NORM-BUILD-OUTPUT) \
 		    elif [ -f $${member}/Makefile ]; then \
 		         $(ECHO) "############ $${member} MAIN" | tee -a build.log;\
-			 $(call makeItAux,$${member},-s $@,build.log,$${member}/NORM-BUILD-OUTPUT) \
+		         $(MAKE) $(MAKE_FLAGS) -C $${member}/ -s $@  2>&1 || echo "### ==> FAILED all ! " | (tee -a build.log | tee $${member}/NORM-BUILD-OUTPUT) \
 		    fi;\
 		    if [ "$(VXWORKS_RTOS)" == "YES" ]; then \
 			if [ -f $${member}/lcu/src/Makefile ]; then \
