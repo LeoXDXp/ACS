@@ -34,10 +34,24 @@
 #include "bulkDataNTSenderStream.h"
 #include "bulkDataNTSenderFlowCallback.h"
 #include "bulkDataNTWriterListener.h"
-
+#include <ACE.h>
 
 namespace AcsBulkdata
 {
+
+struct statisticsStruct {
+	ACE_UINT64 startSendDuration;
+	DDS::DataWriterProtocolStatus startSendDwps;
+	DDS::DataWriterCacheStatus startSendDwcs;
+
+	ACE_UINT64 stopSendDuration;
+	DDS::DataWriterProtocolStatus stopSendDwps;
+	DDS::DataWriterCacheStatus stopSendDwcs;
+
+	std::vector<ACE_UINT64> sendDataDuration;
+	std::vector<DDS::DataWriterProtocolStatus> sendDataDwps;
+	std::vector<DDS::DataWriterCacheStatus> sendDataDwcs;
+} ;
 
 class BulkDataNTSenderStream;
 
@@ -106,17 +120,20 @@ public:
 	 */
 	void stopSend();
 
-	/**
-	 * Logs statistics for debugging
-	 * <P>
-	 * This log is usually submitted at the DEBUG level to avoid impacting
-	 * performances but in case of error we wish to force this log at ERROR
-	 * level.
-	 * With the parameter the user can freely customize the level of this log.
-	 * <P>
-	 * @param level: The level of the log
-	 */
 	void dumpStatistics(ACE_Log_Priority level=LM_DEBUG);
+	/**
+	 * Get and optionally logs the DataWriter statistics.
+	 *
+	 * RTI DDS collects global statistics and the changes from the last set of statistics so getting
+	 * the statistics has the effect to clean the dfference.
+	 * If this method is called before an operation then it is the same as performing a "clean"
+	 * and in case of error the stats read from the DataWriter refers to the last operation only.
+	 *
+	 * @param print: if true log the statistics
+	 */
+	void getStatistics(bool log);
+	void getDelayedStatistics(bool log, int flowMethod);
+	void statisticsLogs();
 
 protected:
 
@@ -165,6 +182,9 @@ protected:
 	void operator=(const BulkDataNTSenderFlow&);
 	/// ALMA C++ coding standards state copy constructors should be disabled.
 	BulkDataNTSenderFlow(const BulkDataNTSenderFlow&);
+
+	statisticsStruct delayedStatistics;
+
 };//class BulkDataSenderFlow
 
 };

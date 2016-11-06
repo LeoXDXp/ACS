@@ -258,8 +258,6 @@ baci::AlarmEventStrategy<T, TPROP, TALARM>::AlarmEventStrategy(Callback_ptr call
   else
     this->_remove_ref();
   
-  // subscribe to event dispatcher
-  eventDispatcher_mp->subscribe(this);
   
   BACIRecoveryManager::getInstance()->addRecoverableObject(this);
   
@@ -456,6 +454,21 @@ void baci::AlarmEventStrategy<T, TPROP, TALARM>::destroy ()
 /*********************************** IMPLEMENTATION AlarmEventStrategyDisc **********************/
 
 template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyDisc<T, TPROP, TALARM>::AlarmEventStrategyDisc(TPROP * property, 
+    EventDispatcher * eventDispatcher) 
+    : AlarmEventStrategy<T, TPROP, TALARM>(property, eventDispatcher)
+{}
+    
+template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyDisc<T, TPROP, TALARM>::AlarmEventStrategyDisc(Callback_ptr callback_p,
+           const CBDescIn& descIn,
+           const ACS::TimeInterval& interval,
+           TPROP * property,
+           EventDispatcher * eventDispatcher) 
+    : AlarmEventStrategy<T, TPROP, TALARM>(callback_p, descIn, interval, property, eventDispatcher)
+{}
+
+template<class T, class TPROP, class TALARM>
 void baci::AlarmEventStrategyDisc<T, TPROP, TALARM>::check(BACIValue &val,
 					     const ACSErr::Completion & c,
 					     const ACS::CBDescOut & desc
@@ -465,8 +478,9 @@ void baci::AlarmEventStrategyDisc<T, TPROP, TALARM>::check(BACIValue &val,
   ACE_UNUSED_ARG(c);
   T value = val.getValue(static_cast<T*>(0));
 
-// copied from Alarmpattern.cpp
- if ((this->alarmRaised_m!=0) &&    // we have an alarm (0 indicates no alarm)
+  ACE_GUARD (ACE_Recursive_Thread_Mutex, ace_mon, templateMutex);
+  // copied from Alarmpattern.cpp
+  if ((this->alarmRaised_m!=0) &&    // we have an alarm (0 indicates no alarm)
       (value<=1))              // "On" or "Off"
     {
       
@@ -513,6 +527,21 @@ void baci::AlarmEventStrategyDisc<T, TPROP, TALARM>::check(BACIValue &val,
 }
 
 /*********************************** IMPLEMENTATION AlarmEventStrategyCont **********************/
+
+template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyCont<T, TPROP, TALARM>::AlarmEventStrategyCont(TPROP * property, 
+        EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(property, eventDispatcher)
+{}
+
+template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyCont<T, TPROP, TALARM>::AlarmEventStrategyCont(Callback_ptr callback_p,
+           const CBDescIn& descIn,
+           const ACS::TimeInterval& interval,
+           TPROP * property,
+           EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(callback_p, descIn, interval, property, eventDispatcher)
+{}
 
 template<class T, class TPROP, class TALARM>
 void baci::AlarmEventStrategyCont<T, TPROP, TALARM>::check(BACIValue &val,
@@ -592,6 +621,22 @@ void baci::AlarmEventStrategyCont<T, TPROP, TALARM>::check(BACIValue &val,
 /*********************************** IMPLEMENTATION AlarmEventStrategyContSeq **********************/
 
 template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyContSeq<T, TPROP, TALARM>::AlarmEventStrategyContSeq(TPROP * property, 
+    EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(property, eventDispatcher), alarmsRaised_mp(0), alarmsRaisedLength_m(-1)
+{}
+
+template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyContSeq<T, TPROP, TALARM>::AlarmEventStrategyContSeq(Callback_ptr callback_p,
+              const CBDescIn& descIn,
+              const ACS::TimeInterval& interval,
+              TPROP * property,
+              EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(callback_p, descIn, interval, property, eventDispatcher), 
+  alarmsRaised_mp(0), alarmsRaisedLength_m(-1)
+{}
+
+template<class T, class TPROP, class TALARM>
 void baci::AlarmEventStrategyContSeq<T, TPROP, TALARM>::check(BACIValue &val,
 					     const ACSErr::Completion & c,
 					     const ACS::CBDescOut & desc)
@@ -599,11 +644,12 @@ void baci::AlarmEventStrategyContSeq<T, TPROP, TALARM>::check(BACIValue &val,
     ACE_UNUSED_ARG(c);
     T valueSeq = val.getValue(static_cast<T*>(0));
     
+    ACE_GUARD (ACE_Recursive_Thread_Mutex, ace_mon, templateMutex);
     if (alarmsRaisedLength_m!=static_cast<int>(valueSeq.length()))
 	{
 	if (alarmsRaised_mp !=0)
 	    { 
-	    delete alarmsRaised_mp; 
+	    delete [] alarmsRaised_mp; 
 	    alarmsRaised_mp = 0; 
 	    alarmsRaisedLength_m = 0;
 	}
@@ -693,6 +739,22 @@ void baci::AlarmEventStrategyContSeq<T, TPROP, TALARM>::check(BACIValue &val,
 // I do not know if this code works or not. It is here that DiscreteSeq can build. Anywat alarm system will be replaced soon.
 
 template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyDiscSeq<T, TPROP, TALARM>::AlarmEventStrategyDiscSeq(TPROP * property, 
+    EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(property, eventDispatcher), alarmsRaised_mp(0), alarmsRaisedLength_m(-1)
+{}
+
+template<class T, class TPROP, class TALARM>
+baci::AlarmEventStrategyDiscSeq<T, TPROP, TALARM>::AlarmEventStrategyDiscSeq(Callback_ptr callback_p,
+              const CBDescIn& descIn,
+              const ACS::TimeInterval& interval,
+              TPROP * property,
+              EventDispatcher * eventDispatcher) 
+: AlarmEventStrategy<T, TPROP, TALARM>(callback_p, descIn, interval, property, eventDispatcher), 
+  alarmsRaised_mp(0), alarmsRaisedLength_m(-1)
+{}
+
+template<class T, class TPROP, class TALARM>
 void baci::AlarmEventStrategyDiscSeq<T, TPROP, TALARM>::check(BACIValue &val,
 					     const ACSErr::Completion & c,
 					     const ACS::CBDescOut & desc)
@@ -700,11 +762,12 @@ void baci::AlarmEventStrategyDiscSeq<T, TPROP, TALARM>::check(BACIValue &val,
     ACE_UNUSED_ARG(c);
     T valueSeq = val.getValue(static_cast<T*>(0));
 
+  ACE_GUARD (ACE_Recursive_Thread_Mutex, ace_mon, templateMutex);
   if (alarmsRaisedLength_m!=static_cast<int>(valueSeq.length()))
     {
       if (alarmsRaised_mp != 0)
 	{ 
-	delete alarmsRaised_mp; 
+	delete [] alarmsRaised_mp; 
 	alarmsRaised_mp = 0; 
 	alarmsRaisedLength_m = 0;
 	}

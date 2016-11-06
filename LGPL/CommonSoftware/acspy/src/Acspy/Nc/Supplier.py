@@ -167,7 +167,11 @@ class Supplier (CosNotifyComm__POA.StructuredPushSupplier, CommonNC):
             self.logger.logWarning(str(e))
             print_exc()
 
-        self.callback.disconnect()
+        try:
+            self.callback.disconnect()
+        except Exception, e:
+            self.logger.logWarning(str(e))
+            print_exc()
         self.callback = None
         self.evtChan = None
         self.supplierAdmin = None  
@@ -263,6 +267,15 @@ class Supplier (CosNotifyComm__POA.StructuredPushSupplier, CommonNC):
                 try:
                     self.sppc.push_structured_event(se)
                     return
+                except CORBA.OBJECT_NOT_EXIST, e:
+                    if self.autoreconnect:
+                        # Recreate the channel
+	                CommonNC.initCORBA(self)
+                        self.initCORBA()
+                    raise CORBAProblemExImpl(nvSeq=[NameValue("channelname",
+                                                              self.channelName),
+                                                    NameValue("exception",
+                                                              str(e))])
                 except Exception, e:
                     print_exc()
                     raise CORBAProblemExImpl(nvSeq=[NameValue("channelname",
@@ -348,7 +361,7 @@ class Supplier (CosNotifyComm__POA.StructuredPushSupplier, CommonNC):
         try:
             self.sppc.push_structured_event(se)
             if event_callback != None:
-                event_calback.eventSent(simple_data)
+                event_callback.eventSent(simple_data)
 
             #For HLA/ITS - to be removed later!
             if get_integration_logs(self.channelName)==1:
@@ -364,7 +377,39 @@ class Supplier (CosNotifyComm__POA.StructuredPushSupplier, CommonNC):
         except (CORBA.COMM_FAILURE, CORBA.TRANSIENT):
             #Notify Service is down
             if event_callback != None:
-                event_calback.eventDropped(simple_data)
+                event_callback.eventDropped(simple_data)
+
+        except (CORBA.OBJECT_NOT_EXIST, CORBA.BAD_OPERATION) as e:
+            #Notify Service is down
+            if self.autoreconnect:
+                # Recreate the channel
+                channel_recreated = False
+                try:
+                    CommonNC.initCORBA(self)
+                    self.initCORBA()
+                    channel_recreated = True
+                except Exception, e:
+                    channel_recreated = False
+
+                if channel_recreated:
+                    # Try to publish again the event
+                    try:
+                        self.sppc.push_structured_event(se)
+                        if event_callback != None:
+                            event_callback.eventSent(simple_data)
+                    # Event cannot be sent
+                    except Exception, e:
+                        if event_callback != None:
+                            event_callback.eventDropped(simple_data)
+                # Channel cannot be recreated
+                else:
+                    if event_callback != None:
+                        event_callback.eventDropped(simple_data)
+            else:
+                raise CORBAProblemExImpl(nvSeq=[NameValue("channelname",
+                                                      self.channelName),
+                                            NameValue("exception",
+                                                      str(e))])
 
         except Exception, e:
             print_exc()

@@ -25,6 +25,7 @@
 
 #include "bulkDataNTSenderFlow.h"
 #include <iostream>
+#include <ACE.h>
 #include "ACS_BD_Errors.h"
 
 using namespace AcsBulkdata;
@@ -225,6 +226,22 @@ void BulkDataNTSenderFlow::startSend(ACE_Message_Block *param)
 
 void BulkDataNTSenderFlow::startSend(const unsigned char *param, size_t len)
 {
+	// Clean statistictics
+	//getStatistics(false);
+	//getStatistics(true);
+	
+	ACE_Time_Value t0 = ACE_OS::gettimeofday();
+	
+	getDelayedStatistics(true, 0);
+
+	// Check the number of receivers
+	int receivers = getNumberOfReceivers();
+	if (receivers==0) {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_ERROR, "startSend invoked without connected listeners in Sender Flow: %s @ Stream: %s", flowName_m.c_str(), senderStream_m->getName().c_str()));
+	} else {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_INFO, "startSend will send data to %d connected listeners in Sender Flow: %s @ Stream: %s", receivers, flowName_m.c_str(), senderStream_m->getName().c_str()));
+	}
+
 	try
 	{
 		if (currentState_m==StartState || currentState_m==StopState)
@@ -246,10 +263,29 @@ void BulkDataNTSenderFlow::startSend(const unsigned char *param, size_t len)
 		ssEx.setSenderName(senderStream_m->getName().c_str()); ssEx.setFlowName(flowName_m.c_str());
 		throw ssEx;
 	}
+
+	ACE_Time_Value t1 = ACE_OS::gettimeofday();
+	(t1 - t0).to_usec(this->delayedStatistics.startSendDuration);
+
 }//startSend
 
 void BulkDataNTSenderFlow::sendData(const unsigned char *buffer, size_t len)
 {
+	// Clean statistics
+	//getStatistics(false);
+	//getStatistics(true);
+	getDelayedStatistics(true, 1);
+
+	ACE_Time_Value t0 = ACE_OS::gettimeofday();
+
+	// Check the number of receivers
+	int receivers = getNumberOfReceivers();
+	if (receivers==0) {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_ERROR, "sendData invoked without connected listeners in Sender Flow: %s @ Stream: %s", flowName_m.c_str(), senderStream_m->getName().c_str()));
+	} else {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_INFO, "sendData will send data to %d connected listeners in Sender Flow: %s @ Stream: %s", receivers, flowName_m.c_str(), senderStream_m->getName().c_str()));
+	}
+
 	//double send_time;
 	ACE_Time_Value start_time, elapsed_time;
 
@@ -338,16 +374,39 @@ void BulkDataNTSenderFlow::sendData(const unsigned char *buffer, size_t len)
 		sfEx.setFrameCount(iteration+1); sfEx.setTotalFrameCount(numOfIter);
 		throw sfEx;
 	}//try-catch
+
+	ACE_Time_Value t1 = ACE_OS::gettimeofday();
+	ACE_UINT64 t;
+        (t1 - t0).to_usec(t);
+
+	this->delayedStatistics.sendDataDuration.push_back(t);
+
 }//sendData
 
 void BulkDataNTSenderFlow::stopSend()
 {
+	// Clean statistics
+	//getStatistics(false);
+	//getStatistics(true);
+	
+	ACE_Time_Value t0 = ACE_OS::gettimeofday();
+	
+	getDelayedStatistics(true, 2);
+
+	// Check the number of receivers
+	int receivers = getNumberOfReceivers();
+	if (receivers==0) {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_ERROR, "stopSend invoked without connected listeners in Sender Flow: %s @ Stream: %s", flowName_m.c_str(), senderStream_m->getName().c_str()));
+	} else {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_INFO, "stopSend will send data to %d connected listeners in Sender Flow: %s @ Stream: %s", receivers, flowName_m.c_str(), senderStream_m->getName().c_str()));
+	}
+
 	try
 	{
 		if (currentState_m==DataRcvState)
 		{
 			writeFrame(ACSBulkData::BD_STOP);
-			if (DDSConfiguration::debugLevel>0) dumpStatistics();
+			if (DDSConfiguration::debugLevel>0) getStatistics(true);
 		}
 		else // here we can be in stop or start state which is not so problematic, and we just log the error
 		{
@@ -364,6 +423,9 @@ void BulkDataNTSenderFlow::stopSend()
 		ssEx.setSenderName(senderStream_m->getName().c_str()); ssEx.setFlowName(flowName_m.c_str());
 		throw ssEx;
 	}
+
+	ACE_Time_Value t1 = ACE_OS::gettimeofday();
+        (t1 - t0).to_usec(this->delayedStatistics.stopSendDuration);
 }//stopSend
 
 void BulkDataNTSenderFlow::writeFrame(ACSBulkData::DataType dataType,  const unsigned char *param, size_t len, unsigned int restFrameCount, bool waitForACKs)
@@ -391,11 +453,7 @@ void BulkDataNTSenderFlow::writeFrame(ACSBulkData::DataType dataType,  const uns
 
 	if( ret != DDS::RETCODE_OK)
 	{
-		dumpStatistics(LM_ERROR);
-		ddsDataWriter_m->get_reliable_writer_cache_changed_status(status); //RTI
-		ACS_SHORT_LOG((LM_ERROR, "unacknowledged_sample_count (%s) %d for flow: %s",
-			dataType2String[dataType], status.unacknowledged_sample_count, flowName_m.c_str())); //RTI
-			// RTI	cout << "\t\t Int unacknowledged_sample_count_peak: " << status.unacknowledged_sample_count_peak << endl;
+		getStatistics(true);
 		if (ret==DDS::RETCODE_TIMEOUT)
 		{
 			SendFrameTimeoutExImpl toEx(__FILE__, __LINE__, __PRETTY_FUNCTION__);
@@ -431,11 +489,7 @@ void BulkDataNTSenderFlow::writeFrame(ACSBulkData::DataType dataType,  const uns
 
 		if( ret != DDS::RETCODE_OK)
 		{
-			dumpStatistics(LM_ERROR);
-			ddsDataWriter_m->get_reliable_writer_cache_changed_status(status); //RTI
-			ACS_SHORT_LOG((LM_ERROR, "unacknowledged_sample_count (%s) %d for flow: %s",
-					dataType2String[dataType], status.unacknowledged_sample_count, flowName_m.c_str())); //RTI
-					// RTI	cout << "\t\t Int unacknowledged_sample_count_peak: " << status.unacknowledged_sample_count_peak << endl;
+			getStatistics(true);
 			FrameAckTimeoutExImpl ackToEx(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 			ackToEx.setSenderName(senderStream_m->getName().c_str()); ackToEx.setFlowName(flowName_m.c_str());
 			ackToEx.setTimeout(ackTimeout_m.sec + ackTimeout_m.nanosec/1000000.0);
@@ -449,14 +503,17 @@ void BulkDataNTSenderFlow::writeFrame(ACSBulkData::DataType dataType,  const uns
 	}//if (waitForACKs || restFrameCount==0)
 }//writeFrame
 
-void BulkDataNTSenderFlow::dumpStatistics(ACE_Log_Priority level)
+void BulkDataNTSenderFlow::getStatistics(bool log)
 {
 	DDS::DataWriterProtocolStatus dwps;
 	DDS::DataWriterCacheStatus dwcs;
 
+	// This must be read even without logging as it performs a kind of "clean"
+
 	ddsDataWriter_m->get_datawriter_protocol_status(dwps);
-	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
-			(level, "DataWriter protocol status for flow: %s [sample pushed: %lld (%lld) HB: %lld (%lld) ACKs: %lld (%lld) NACKs: %lld (%lld) Rejected: %lld]",
+	if (log) {
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+		(LM_DEBUG, "TEST DataWriter protocol status for flow: %s [# samples: %lld (bytes %lld); # HBs count: %lld (bytes %lld) # ACKs: %lld (bytes %lld) # NACK counts: %lld (bytes %lld) # rejected: %lld]",
 					flowName_m.c_str(),
 					dwps.pushed_sample_count_change, dwps.pushed_sample_bytes_change,
 					dwps.sent_heartbeat_count_change, dwps.sent_heartbeat_bytes_change,
@@ -464,9 +521,99 @@ void BulkDataNTSenderFlow::dumpStatistics(ACE_Log_Priority level)
 					dwps.received_nack_count_change, dwps.received_nack_bytes_change,
 					dwps.rejected_sample_count_change));
 
-	ddsDataWriter_m->get_datawriter_cache_status(dwcs);
-	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
-			(level, "DataWriter cache Status: sample count (peak): %lld (%lld)", dwcs.sample_count, dwcs.sample_count_peak));
+		// This does not perform a clean so it is useful to call only when data needs to be logged
+		ddsDataWriter_m->get_datawriter_cache_status(dwcs);
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+			(LM_DEBUG, "DataWriter cache Status: sample count in queue: %lld (highest peak since lifetime %lld)", dwcs.sample_count, dwcs.sample_count_peak));
+	}
 }//void dumpStatistics()
+
+void BulkDataNTSenderFlow::getDelayedStatistics(bool log, int flowMethod)
+{
+	if(log){
+
+		if(flowMethod == 0) {
+			ddsDataWriter_m->get_datawriter_protocol_status(this->delayedStatistics.startSendDwps);
+			ddsDataWriter_m->get_datawriter_cache_status(this->delayedStatistics.startSendDwcs);
+		}
+		else if(flowMethod == 1){
+			DDS::DataWriterProtocolStatus dwps;
+			DDS::DataWriterCacheStatus dwcs;
+
+			ddsDataWriter_m->get_datawriter_protocol_status(dwps);
+			ddsDataWriter_m->get_datawriter_cache_status(dwcs);
+
+			this->delayedStatistics.sendDataDwps.push_back(dwps);
+			this->delayedStatistics.sendDataDwcs.push_back(dwcs);
+		}
+		else if(flowMethod == 1){
+			ddsDataWriter_m->get_datawriter_protocol_status(this->delayedStatistics.stopSendDwps);
+			ddsDataWriter_m->get_datawriter_cache_status(this->delayedStatistics.stopSendDwcs);
+		}
+	}
+}//void dumpStatistics()
+
+void BulkDataNTSenderFlow::statisticsLogs()
+{
+	// START SEND DURATION
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_DEBUG, "START SEND duration: %jd usecs", (intmax_t)this->delayedStatistics.startSendDuration));
+	
+	// START SEND PROTOCOL STATUS
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+	(LM_DEBUG, "START SEND: DataWriter protocol status for flow: %s [# samples: %lld (bytes %lld); # HBs count: %lld (bytes %lld) # ACKs: %lld (bytes %lld) # NACK counts: %lld (bytes %lld) # rejected: %lld]",
+				flowName_m.c_str(),
+				this->delayedStatistics.startSendDwps.pushed_sample_count_change, this->delayedStatistics.startSendDwps.pushed_sample_bytes_change,
+				this->delayedStatistics.startSendDwps.sent_heartbeat_count_change, this->delayedStatistics.startSendDwps.sent_heartbeat_bytes_change,
+				this->delayedStatistics.startSendDwps.received_ack_count_change, this->delayedStatistics.startSendDwps.received_ack_bytes_change,
+				this->delayedStatistics.startSendDwps.received_nack_count_change, this->delayedStatistics.startSendDwps.received_nack_bytes_change,
+				this->delayedStatistics.startSendDwps.rejected_sample_count_change));
+
+	// SEND DATA DURATION
+        for(std::vector<ACE_UINT64>::iterator duration = this->delayedStatistics.sendDataDuration.begin(); duration != this->delayedStatistics.sendDataDuration.end(); ++duration){
+                ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+                        (LM_DEBUG, "SEND DATA duration  %jd usecs", (intmax_t)*duration));
+        }
+
+	// START SEND CACHE STATUS
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+		(LM_DEBUG, "START SEND: DataWriter cache Status: sample count in queue: %lld (highest peak since lifetime %lld)", this->delayedStatistics.startSendDwcs.sample_count, this->delayedStatistics.startSendDwcs.sample_count_peak));
+
+	// SEND DATA PROTOCOL STATUS
+	for(std::vector<DDS::DataWriterProtocolStatus>::iterator dwps = this->delayedStatistics.sendDataDwps.begin(); dwps != this->delayedStatistics.sendDataDwps.end(); ++dwps){
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+		(LM_DEBUG, "SEND DATA: DataWriter protocol status for flow: %s [# samples: %lld (bytes %lld); # HBs count: %lld (bytes %lld) # ACKs: %lld (bytes %lld) # NACK counts: %lld (bytes %lld) # rejected: %lld]",
+					flowName_m.c_str(),
+					dwps->pushed_sample_count_change,   dwps->pushed_sample_bytes_change,
+					dwps->sent_heartbeat_count_change,  dwps->sent_heartbeat_bytes_change,
+					dwps->received_ack_count_change,    dwps->received_ack_bytes_change,
+					dwps->received_nack_count_change,   dwps->received_nack_bytes_change,
+					dwps->rejected_sample_count_change));
+	}
+
+	// SEND DATA CACHE STATUS
+	for(std::vector<DDS::DataWriterCacheStatus>::iterator dwcs = this->delayedStatistics.sendDataDwcs.begin(); dwcs != this->delayedStatistics.sendDataDwcs.end(); ++dwcs){
+		ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+			(LM_DEBUG, "SEND DATA: DataWriter cache Status: sample count in queue: %lld (highest peak since lifetime %lld)", dwcs->sample_count, dwcs->sample_count_peak));
+	}
+
+	// STOP SEND DURATION
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__, (LM_DEBUG, "STOP SEND duration: %jd usecs", (intmax_t)this->delayedStatistics.stopSendDuration));
+	
+	// STOP SEND PROTOCOL STATUS
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+	(LM_DEBUG, "STOP SEND: DataWriter protocol status for flow: %s [# samples: %lld (bytes %lld); # HBs count: %lld (bytes %lld) # ACKs: %lld (bytes %lld) # NACK counts: %lld (bytes %lld) # rejected: %lld]",
+				flowName_m.c_str(),
+				this->delayedStatistics.stopSendDwps.pushed_sample_count_change, this->delayedStatistics.stopSendDwps.pushed_sample_bytes_change,
+				this->delayedStatistics.stopSendDwps.sent_heartbeat_count_change, this->delayedStatistics.stopSendDwps.sent_heartbeat_bytes_change,
+				this->delayedStatistics.stopSendDwps.received_ack_count_change, this->delayedStatistics.stopSendDwps.received_ack_bytes_change,
+				this->delayedStatistics.stopSendDwps.received_nack_count_change, this->delayedStatistics.stopSendDwps.received_nack_bytes_change,
+				this->delayedStatistics.stopSendDwps.rejected_sample_count_change));
+
+	// STOP SEND CACHE STATUS
+	ACS_LOG(LM_RUNTIME_CONTEXT, __FUNCTION__,
+		(LM_DEBUG, "STOP SEND: DataWriter cache Status: sample count in queue: %lld (highest peak since lifetime %lld)", this->delayedStatistics.stopSendDwcs.sample_count, this->delayedStatistics.stopSendDwcs.sample_count_peak));
+}//void dumpStatistics()
+
+
 
 /*___oOo___*/

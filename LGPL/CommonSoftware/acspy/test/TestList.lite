@@ -57,9 +57,7 @@ PROLOGUE acspyTATPrologue
                         "acsutilTATTestRunner acsStopContainer PyTestCDBContainer" "@SLEEP 10"
 
 09  reloadComponent     "acsutilTATTestRunner acsStartContainer -py pyContainer2" "@SLEEP 10" \
-
                         "acsutilTATTestRunner acspyTestCompReload" "@SLEEP 20" \
-
                         "acsutilTATTestRunner acsStopContainer pyContainer2" "@SLEEP 10"
 
 10 testConsumerNoChannel  "acsutilTATTestRunner acspyTestConsumer no_name 5 0"
@@ -78,5 +76,42 @@ PROLOGUE acspyTATPrologue
 16 testArchiveSupplier    "acsutilTATTestRunner acspyTestArchiveConsumer 15 11" "@SLEEP 3" "acsutilTATTestRunner acspyTestArchiveSupplier"  "@SLEEP 60"
 17 testLoggingConsumer    "acsutilTATTestRunner acspyTestLoggingConsumer 15"
 18 acspyTestContainerActivationMap "acsutilTATTestRunner acspyTestContainerActivationMap.py"
+
+19   PyContainerLogStatsConfigurationTest "acsutilTATTestRunner acsutilAwaitContainerStart -py PyTestContainer" \
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer list" \
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer get PyTestContainer"  \
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer set PyTestContainer -c Enable -n testName -p 700 -g 2" \
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer get PyTestContainer" \
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer set PyTestContainer -c Default"\
+   "@SLEEP 1" "acsutilTATTestRunner maciContainerLogStatsConfiguration PyTestContainer get PyTestContainer"
+
+20 testSupplierConsumerCallback "acsutilTATTestRunner acspyTestConsumer no_name 15 1" "@SLEEP 2" \
+                          "acsutilTATTestRunner acspyTestSupplierCallback no_name 15"
+
+# Check the reconnection of a publisher when autoreconnection is ON and its Notify Service is restarted.
+21 testPublisherAutoreconnectNSRestarted "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 4" \
+   "acsutilTATTestRunner acspyTestSupplierReconn test_reconn 20 AUTORECONNECT NS_RESTARTED" "@SLEEP 5" \
+   "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 25"
+
+## Check the reconnection of a publisher when autoreconnection is ON and its Notify Service is stopped.
+22 testPublisherAutoreconnectNSStopped "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 4" \
+   "acsutilTATTestRunner acspyTestSupplierReconn test_reconn 20 AUTORECONNECT NS_STOPPED" "@SLEEP 5" \
+   "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory STOP" "@SLEEP 25"
+
+# Check the reconnection of a publisher when autoreconnection is OFF and its Notify Service is restarted.
+23 testPublisherNoAutoreconnectNSRestarted "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 4" \
+   "acsutilTATTestRunner acspyTestSupplierReconn test_reconn 20 NO_AUTORECONNECT NS_RESTARTED" "@SLEEP 5" \
+   "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 25"
+
+# Check the reconnection of a publisher when autoreconnection is OFF and its Notify Service is stopped.
+24 testPublisherNoAutoreconnectNSStopped "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 4" \
+   "acsutilTATTestRunner acspyTestSupplierReconn test_reconn 20 NO_AUTORECONNECT NS_STOPPED" "@SLEEP 5" \
+   "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory STOP" "@SLEEP 25"
+
+# Check the reconnection of consumers when autoreconnection is ON and its Notify Service is restarted
+25 testConsumerAutoreconnectNSRestarted "acsutilTATTestRunner acspyExecNotifyService.sh NotifyEventChannelFactory RESTART" "@SLEEP 4" \
+   "acsutilTATTestRunner acspyTestConsumerReconn test_reconn 20 AUTORECONNECT NS_RESTARTED"
+
+
 #-------------------------------------------------------------------
 EPILOGUE acsutilTATEpilogue

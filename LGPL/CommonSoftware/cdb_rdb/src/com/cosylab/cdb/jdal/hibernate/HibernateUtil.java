@@ -24,13 +24,13 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.sql.Connection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 
 
@@ -103,7 +103,7 @@ public class HibernateUtil {
 		this.logger = logger;
 	    // Create the initial SessionFactory from the default configuration files
         try {
-            configuration = new AnnotationConfiguration();
+            configuration = new Configuration();
             sessionFactory = configuration.configure(getConfigurationFileName()).buildSessionFactory();
             // We could also let Hibernate bind it to JNDI:
             // configuration.configure().buildSessionFactory()
@@ -127,7 +127,7 @@ public class HibernateUtil {
 	 */
 	public void setConfiguration(Properties extraProperties) {
         try {
-            Configuration config = new AnnotationConfiguration();
+            Configuration config = new Configuration();
             config.configure(getConfigurationFileName());
             config.addProperties(extraProperties);
             sessionFactory = config.buildSessionFactory();
@@ -234,7 +234,7 @@ public class HibernateUtil {
                 //System.err.println("Opening new Session for this thread.");
                 if (getInterceptor() != null) {
                     //System.err.println("Using interceptor: " + getInterceptor().getClass());
-                    s = getSessionFactory().openSession(getInterceptor());
+                    s = getSessionFactory().withOptions().interceptor(getInterceptor()).openSession();
                 } else {
                     //System.err.println("Without interceptor");
                     s = getSessionFactory().openSession();
@@ -331,7 +331,8 @@ public class HibernateUtil {
 	public void reconnect(Session session)
     throws HibernateUtilException {
         try {
-            session.reconnect();
+            Connection c = session.disconnect();
+            session.reconnect(c);
             threadSession.set(session);
         } catch (HibernateException ex) {
             throw new HibernateUtilException(ex);

@@ -60,8 +60,14 @@ JAVA_EDIRS = $(JACORB_ENDORSED)$(subst $(SPACE),,$(foreach dir,$(subst -L,,$(str
 AlmaIDLMainClass=alma.tools.idlgen.XmlIdlCompiler
 #
 #  RTAI
+CPU := $(shell uname -p)
 ifneq ($(strip $(RTAI_HOME)),)
-RTAI_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe  -march=i686 -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_RTAI_CFLAGS) 
+ifeq ($(CPU),x86_64)
+RTAI_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_RTAI_CFLAGS) 
+else
+RTAI_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe  -march=i686 -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_RTAI_CFLAGS)
+endif
+ 
 RTAI_CONFIG := $(RTAI_HOME)/bin/rtai-config
 KDIR := $(shell $(RTAI_CONFIG) --linux-dir)
 CCRTAI:=$(shell $(RTAI_CONFIG) --cc)
@@ -72,7 +78,11 @@ endif
 #  Kernel modules
 ifeq ($(strip $(RTAI_HOME)),)
 ifneq ($(strip $(LINUX_HOME)),)
-KERNEL_MODULE_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe  -march=i686 -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_KERNEL_MODULE_CFLAGS) 
+ifeq ($(CPU),x86_64)
+KERNEL_MODULE_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_KERNEL_MODULE_CFLAGS)
+else
+KERNEL_MODULE_CFLAGS = -D__KERNEL__ -DMODULE -O2 -Wall -Wstrict-prototypes -Wno-trigraphs  -fomit-frame-pointer -fno-strict-aliasing -fno-common -pipe  -march=i686 -falign-functions=4 -I$(LINUX_HOME)/include/linux -I$(LINUX_HOME)/include/asm-i386/mach-default $(USER_KERNEL_MODULE_CFLAGS)
+endif 
 KDIR := /lib/modules/$(kernel_install_subfold)/build
 CCKERNEL:=cc
 USR_INC = -I$(LINUX_HOME)/include  $(patsubst -I..%,-I$(PWD)/..%,$(I_PATH))
@@ -473,47 +483,6 @@ ifneq ($(strip $(PY_ALL_LIST)),)
 endif	
 
 #################################################################
-## PANELS
-#################################################################
-PANEL_LIST = $(PANELS) $(PANELS_L)
-#
-# if the list of panels is not empty, include panel-dependencies files. 
-ifneq ($(strip $(PANEL_LIST)),)
-$(eval $(call top-level,panel,$(PANEL_LIST),$(PANELS)))
-$(foreach panel,$(PANEL_LIST), $(eval $(call acsMakePanelDependencies,$(panel)) ) )
-endif
-
-#################################################################
-## DBL_CLASSES DBL_BCF
-#################################################################
-
-ifneq ($(strip $(DBL_CLASSES)),)
-install_DB-Classes: DB-Classes_begin $(foreach dblc, $(DBL_CLASSES), $(DBL)/$(dblc).class )
-
-DB-Classes_begin:
-	@$(ECHO) "...DB-Classes:"
-
-$(DBL)/%.class: ../dbl/%.class
-	-$(AT)echo "\t$*" 
-	$(AT)cp ../dbl/$*.class $(DBL)/$*.class
-	$(AT)chmod $(P644) $(DBL)/$*.class
-
-endif
-
-ifneq ($(strip $(DBL_BCF)),)
-install_DB-BCF: DB-BCF_begin $(foreach dblb, $(DBL_BCF), $(DBL)/$(dblb).db )
-
-DB-BCF_begin:
-	@echo "...DB-Classes:"
-
-$(DBL)/%.db: ../dbl/%.db
-	-$(AT)echo "\t$*"
-	$(AT)cp ../dbl/$*.db $(DBL)/$*.db
-	$(AT)chmod $(P644) $(DBL)/$*.db
-endif
-
-
-#################################################################
 ## TCL/SCRIPTS  TCL/LIBRARIES
 #################################################################
 
@@ -559,6 +528,7 @@ clean_rtais: clean_rtai_final
 .PHONY:
 clean_rtai_final:
 	$(AT)$(RM) Kbuild ../rtai/$(kernel_install_subfold)
+	$(foreach rm,$(RTAI_MODULES_LIST),$(AT)$(RM) ../bin/installLKM-$(rm))
 
 endif
 # some target needs to be assigned this task
