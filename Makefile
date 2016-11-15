@@ -105,7 +105,7 @@ MODULES =  $(foreach kit, $(MODULES_KIT), $(MODULE_PREFIX)/Kit/$(kit)) \
 #!#    MAKE_FLAGS = "NOCCS=1"
 #!#endif
 
-SHELL=/bin/ksh
+SHELL=/bin/sh
 ECHO=echo
 
 ifdef MAKE_VERBOSE
