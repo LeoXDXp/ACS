@@ -62,7 +62,7 @@ ifeq ($(os),$(CYGWIN_VER))
 endif
 
 
-SHELL=/bin/ksh
+SHELL=/bin/sh
 ECHO=echo
 
 ifdef MAKE_VERBOSE
