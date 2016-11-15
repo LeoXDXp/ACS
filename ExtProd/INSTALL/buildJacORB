@@ -281,13 +281,13 @@ cd $JACORB_HOME/idl
 echo "==== Copy extra IDLs CosProperty(Service), DsLogAdmin and AVStreams into JacORB directory tree"
 
 cd $JACORB_HOME/idl/omg
-cp $ACE_ROOT/TAO/orbsvcs/orbsvcs/CosProperty.idl .
+cp /usr/include/orbsvcs/CosProperty.idl .
 if [ $? -ne 0 ]
 then
      echo "========= FAILED =========="
 	exit 1
 fi
-cp $ACE_ROOT/TAO/orbsvcs/orbsvcs/DsLogAdmin.idl .
+cp /usr/include/orbsvcs/DsLogAdmin.idl .
 if [ $? -ne 0 ]
 then
      echo "========= FAILED =========="
@@ -295,14 +295,14 @@ then
 fi
 
 mkdir tao
-cp $ACE_ROOT/TAO/tao/TimeBase.pidl tao/
+cp /usr/include/tao/TimeBase.pidl tao/
 if [ $? -ne 0 ]
 then
      echo "========= FAILED =========="
 	exit 1
 fi
 
-cp $ACE_ROOT/TAO/orbsvcs/orbsvcs/AVStreams.idl .
+cp /usr/include/orbsvcs/AVStreams.idl .
 if [ $? -ne 0 ]
 then
      echo "========= FAILED =========="
