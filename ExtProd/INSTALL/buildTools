@@ -188,12 +188,12 @@ fi
 # to make sure that the presence of VxWorks is detected.
 # I have to use the --login option, because on sun -l does not work.
 
-echo -n "buildTAO"
-if [ "$OS" = "$CYGWIN_VER" ]; then
-  ./buildTAO &>/dev/null &&  echo_success || echo_failure
-else
-  bash --login ./buildTAO &>/dev/null &&  echo_success || echo_failure
-fi
+#echo -n "buildTAO"
+#if [ "$OS" = "$CYGWIN_VER" ]; then
+#  ./buildTAO &>/dev/null &&  echo_success || echo_failure
+#else
+#  bash --login ./buildTAO &>/dev/null &&  echo_success || echo_failure
+#fi
 
 #echo -n "buildDDS"
 #./buildDDS  &&  echo_success || echo_failure
@@ -205,54 +205,54 @@ fi
 #fi
 
 #Dont (apache) Maven on ubuntu or Centos7
-if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
-then
-	echo -n "buildMaven"
-	./buildMaven && echo_success || echo_failure
-fi
-
+#if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
+#then
+#	echo -n "buildMaven"
+#	./buildMaven && echo_success || echo_failure
+#fi
+#
 # Don build Ant on Ubuntu or Centos7
-if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
-then
-	echo -n "buildAnt"
-	./buildAnt && echo_success || echo_failure
-fi
+#if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
+#then
+#	echo -n "buildAnt"
+#	./buildAnt && echo_success || echo_failure
+#fi
 
 echo  -n "buildJacORB" 
 ./buildJacORB && echo_success || echo_failure
-echo -n "buildPython"
-./buildPython && echo_success || echo_failure
+#echo -n "buildPython"
+#./buildPython && echo_success || echo_failure
 
 
-if  [  "$UBDIST" != "Ubuntu" ]
-then
-	echo -n "buildPyModules"
-	./buildPyModules && echo_success || echo_failure
-fi
+#if  [  "$UBDIST" != "Ubuntu" ]
+#then
+#	echo -n "buildPyModules"
+#	./buildPyModules && echo_success || echo_failure
+#fi
 
-if [ "$CENTOS" != "el7" ]
-then
-	echo -n "buildOmniORB"
-	./buildOmniORB && echo_success || echo_failure
-fi
+#if [ "$CENTOS" != "el7" ]
+#then
+#	echo -n "buildOmniORB"
+#	./buildOmniORB && echo_success || echo_failure
+#fi
 #TODO remove mico build and also the mico files from cvs,
 # once we are sure that TAO IFR will supersede mico even for acsMakefile checks.
-#echo -n "buildMico"
-#./buildMico && echo_success || echo_failure
-echo -n "buildEclipse"
-./buildEclipse && echo_success || echo_failure
+echo -n "buildMico"
+./buildMico && echo_success || echo_failure
+#echo -n "buildEclipse"
+#./buildEclipse && echo_success || echo_failure
 
-if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
-then
-	echo -n "buildBoost"
-	./buildBoost && echo_success || echo_failure
-fi
+#if  [  "$UBDIST" != "Ubuntu" ] || [ "$CENTOS" != "el7" ]
+#then
+#	echo -n "buildBoost"
+#	./buildBoost && echo_success || echo_failure
+#fi
 #Install Cygwin Java Wrappers
-if [ "$OS" = "$CYGWIN_VER" ]; then
-  echo "Install Cygwin Wrappers"
-  cp -r ../PRODUCTS/CygwinWrappers $ALMASW_INSTDIR/CygwinWrappers
-  chmod +x $ALMASW_INSTDIR/CygwinWrappers/*
-fi
+#if [ "$OS" = "$CYGWIN_VER" ]; then
+#  echo "Install Cygwin Wrappers"
+#  cp -r ../PRODUCTS/CygwinWrappers $ALMASW_INSTDIR/CygwinWrappers
+#  chmod +x $ALMASW_INSTDIR/CygwinWrappers/*
+#fi
 
 # if the user wants RTOS he/she has to build it by hand using buildRTOS
 # from the directory ../RTOS.
