@@ -55,12 +55,12 @@ else
 	UBDIST="Other"
 fi
 
-if [ $(uname -a | grep "\.el7\.") ]
-then
-	CENTOS="el7"
-else
-	CENTOS="Other"
-fi
+#if [ $(uname -a | grep "\.el7\.") ]
+#then
+#	CENTOS="el7"
+#else
+#	CENTOS="Other"
+#fi
 
 #
 # No INTROOT please!
