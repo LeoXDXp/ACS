@@ -49,7 +49,7 @@ endef
 #
 
 MODULES_TOOLS = emacs tat expat loki extjars antlr hibernate extpy cppunit getopt astyle swig xercesc xercesj castor xsddoc extidl vtd-xml oAW shunit2 log4cpp scxml_apache
-
+# tat extjars getopt astyle xercesc xercesj xsddoc extidl vtd-xml oAW  scxml_apache -> Tools aun no integradas a rpm
 
 
 SUBSYSTEM = "Tools"
