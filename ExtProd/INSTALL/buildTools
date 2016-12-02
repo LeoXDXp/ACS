@@ -188,28 +188,18 @@ else
   bash --login ./buildTAO &>/dev/null &&  echo_success || echo_failure
 fi
 
-echo -n "buildDDS"
-./buildDDS  &&  echo_success || echo_failure
-echo -n "buildOpenSpliceDDS"
-if [ "$OS" = "$CYGWIN_VER" ]; then
-  ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
-else
-  bash --login ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
-fi
-
-#Dont Maven on ubuntu
-if  [  "$UBDIST" != "Ubuntu" ]
-then
-	echo -n "buildMaven"
-	./buildMaven && echo_success || echo_failure
-fi
-
-if  [  "$UBDIST" != "Ubuntu" ]
-then
-	echo -n "buildAnt"
-	./buildAnt && echo_success || echo_failure
-fi
-
+#echo -n "buildDDS"
+#./buildDDS  &&  echo_success || echo_failure
+#echo -n "buildOpenSpliceDDS"
+#if [ "$OS" = "$CYGWIN_VER" ]; then
+#  ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
+#else
+#  bash --login ./buildOpenSpliceDDS &>/dev/null  &&  echo_success || echo_failure
+#fi
+echo -n "buildMaven"
+./buildMaven && echo_success || echo_failure
+echo -n "buildAnt"
+./buildAnt && echo_success || echo_failure
 echo  -n "buildJacORB" 
 ./buildJacORB && echo_success || echo_failure
 echo -n "buildPython"

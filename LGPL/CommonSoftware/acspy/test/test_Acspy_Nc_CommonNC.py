@@ -32,6 +32,8 @@ import CORBA
 import CosNaming
 import CosNotification
 import NotifyMonitoringExt
+import time
+import datetime
 
 #--ACS Imports-----------------------------------------------------------------
 import acscommon
@@ -218,7 +220,7 @@ class TestCommonNC(unittest.TestCase):
         """CommonNC createNotificationChannel throws correct exception when wrong type returned for EventChannelFactory"""
         self.nc.nt = mock.Mock(spec=NameTree.nameTree)
         def side_effect(*args):
-            raise NotifyMonitoringExt.NameAlreadyUsed(None)
+            raise NotifyMonitoringExt.NameAlreadyUsed()
         mfact = mock.Mock(spec=CORBA.Object)
         mfact._narrow.return_value = None
         self.nc.nt.getObject.return_value = mfact
@@ -277,7 +279,7 @@ class TestCommonNC(unittest.TestCase):
         """CommonNC createNotificationChannel throws correct exception when EventChannelFactory cannot create duplicate channel"""
         self.nc.nt = mock.Mock(spec=NameTree.nameTree)
         def side_effect(*args):
-            raise NotifyMonitoringExt.NameAlreadyUsed(None)
+            raise NotifyMonitoringExt.NameAlreadyUsed()
         mchanfac = mock.Mock(spec=NotifyMonitoringExt._objref_EventChannelFactory)
         mchanfac.create_named_channel.side_effect = side_effect
         mfact = mock.Mock(spec=CORBA.Object)
@@ -298,7 +300,7 @@ class TestCommonNC(unittest.TestCase):
         """CommonNC createNotificationChannel throws correct exception when EventChannelFactory cannot create mapping for channel"""
         self.nc.nt = mock.Mock(spec=NameTree.nameTree)
         def side_effect(*args):
-            raise NotifyMonitoringExt.NameMapError(None)
+            raise NotifyMonitoringExt.NameMapError()
         mchanfac = mock.Mock(spec=NotifyMonitoringExt._objref_EventChannelFactory)
         mchanfac.create_named_channel.side_effect = side_effect
         mfact = mock.Mock(spec=CORBA.Object)
@@ -433,10 +435,13 @@ class TestCommonNC(unittest.TestCase):
     @mock.patch_object(Acspy.Nc.CommonNC, 'NameTree', mockNameTree)
     def test_initCORBA(self):
         """CommonNc initCORBA initializes object correctly"""
+        def mockGetChannelTimestamp():
+            return datetime.datetime.fromtimestamp(time.time())
         global mocknameTree
         co = mock.Mock(spec=CORBA.Object)
         co._narrow.return_value = mock.Mock(spec=NotifyMonitoringExt.EventChannel)
         mocknameTree.getObject.return_value = co
+        self.nc.getChannelTimestamp = mockGetChannelTimestamp
         self.nc.initCORBA()
         self.assertEqual(False, self.nc.nt is None)
         self.assertEqual(mocknameTree, self.nc.nt)
@@ -483,7 +488,7 @@ class TestCommonNC(unittest.TestCase):
     def test_initCORBA_noChannelDuplicate(self):
         """CommonNc initCORBA retries Naming Service lookup if EventChannel create fails with duplicate name exception"""
         def mockCreate():
-            e = NotifyMonitoringExt.NameAlreadyUsed(None)
+            e = NotifyMonitoringExt.NameAlreadyUsed()
             raise CORBAProblemExImpl(nvSeq=[NameValue("channelname",
                                                       self.nc.channelName),
                                             NameValue("reason",

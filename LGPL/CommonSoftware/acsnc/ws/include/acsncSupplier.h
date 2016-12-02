@@ -198,6 +198,25 @@ class Supplier :
 
     void setAntennaName(std::string antennaName);
 
+    /**
+     * This method is used to set the autoreconnect attribute. This is a boolean to 
+     * reconnect to the channel when the publication of an event throws an 
+     * OBJECT_NOT_EXIST exception. That is, the Notify Service doesn't exist.
+     * This could happen when the Notify Service restarts.
+     * @see autoreconnect_m
+     */
+    void setAutoreconnect(bool autoreconnect);
+
+    /**
+     * Increase the event buffer size used to store events that couldn't be published
+     */
+    bool increaseEventBufferSize(unsigned int bufferSize);
+
+    /**
+     * Return the event buffer size
+     */
+    unsigned int getEventBufferSize() const;
+
   protected:
     /**
      * Destructor is protected.
@@ -286,6 +305,8 @@ class Supplier :
 	;
 
 
+    void
+    reinit();
     
     /** 
      *  Supplier Admin object is responsible for creating & managing proxy consumers
@@ -330,8 +351,21 @@ class Supplier :
     
     std::string antennaName;
 
+    /**
+     * This is a boolean to reconnect to the channel when the publication of an event 
+     * throws an OBJECT_NOT_EXIST exception. That is, the Notify Service doesn't exist.
+     * This could happen when the Notify Service restarts.
+     */
+    bool autoreconnect_m;
+
+    /**
+     * Ensure mutual execution of publish methods
+     */
+    ACE_Recursive_Thread_Mutex m_publishMutex;
+
   private:
     
+    static const uint32_t SLEEP_TIME_BEFORE_SENDING_BUFFERED_EVENTS;
 
     /**
      * ALMA C++ coding standards state assignment operators should be disabled.

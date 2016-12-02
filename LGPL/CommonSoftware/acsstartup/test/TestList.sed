@@ -15,7 +15,7 @@ s/Host=[0-9,a-z,A-Z,-,_]*/Host=xxxx/g
 s/Process=PID: [0-9]*/Process=PID: xxx/g
 s/RTContext: ([-0-9,a-z,A-Z,_]*, [-0-9,a-z,A-Z,_]*, [-0-9,a-z,A-Z,_]*, [0-9,a-z,A-Z,-,_]*,/RTContext: (xxx, xxx, xxx, xxx,/g
 s/Thread=ID: [0-9]*/Thread=ID: xxx/g
-s/instance at 0x[0-9,a-z,A-Z]*/instance at 0xXXXX/g
+s/object at 0x[0-9,a-z,A-Z]*/object at 0xXXXX/g
 s/Process=[0-9]*/Process=xxx/g
 s/\/[a-z,A-Z,0-9,-,.,_,/]*[:] line [0-9]*[:] [0-9]* Killed/\/xxx: line xxx Killed/g
 s/Unable to shutdown because the lock directory '.*\/ACS_INSTANCE/Unable to shutdown because the lock directory '$ACS_TMP\/ACS_INSTANCE/g
@@ -39,3 +39,10 @@ s/Locking instance [0-9] with lock file .*/Locking instance N with lock file ..a
 s/Freeing instance [0-9] removing lock file .*/Freeing instance N removing lock file ..acsInstanceN.lock/g
 s/org.jacorb.naming.NameServer .*/org.jacorb.naming.NameServer.../g
 s/Starting Java application: org.jacorb.naming.NameServer .*/Starting Java application: org.jacorb.naming.NameServer.../g
+
+s/TEST[0-9]* \([0-9]*\) [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/TEST \1 a.b.c.d/g
+s/Stopping the CORBA TEST[0-9]* Notification Service/Stopping the CORBA TEST Notification Service/g
+s/Name Service without channel entries in the endpoint [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*/Name Service without channel entries in the endpoint a.b.c.d:xxxx/g
+s/([0-9]*|[0-9]*) EXCEPTION/EXCEPTION/g
+s/\[[0-9]*.[0-9]*.[0-9]*.[0-9]*:[0-9]*\] deleted in the Naming Service/[a.b.c.d:xxxx] deleted in the Naming Service/g
+s/-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/-YYYY-MM-DD_HH:MM:SS/g

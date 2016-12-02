@@ -23,6 +23,7 @@
 
 #include "loggingStatistics.h"
 #include <sstream>
+#include <iostream>
 
 namespace Logging {
     //-----------------------------------------------------------------------------------
@@ -43,7 +44,8 @@ namespace Logging {
     		lastPeriodNumberOfMessages(INITIAL_NUMBER_MESSAGES),
     		lastPeriodNumberOfLogErrors(INITIAL_NUMBER_ERRORS)
 	{
-
+		// Construct the identification string of the statistics
+		statisticsIdentification = "Undefined";
 	}
 
     // Statistics module methods
@@ -130,6 +132,7 @@ namespace Logging {
 				           (float(100) / float(getLastPeriodNumberOfMessages()) );
 	    errorIncrement= (float(getAccumulatedNumberOfLogErrors()) - float(getLastPeriodNumberOfLogErrors()) ) *
 		                (float(100) / float(getLastPeriodNumberOfLogErrors()) );
+
     }
 
     void
@@ -291,5 +294,32 @@ namespace Logging {
 	loggingStatistics::setLastPeriodNumberOfLogErrors(uint32_t value)
 	{
 		lastPeriodNumberOfLogErrors = value;
+	};
+
+	// Statistics calculation getters
+	float
+	loggingStatistics::getMessageStatistics()
+	{
+		return messageStatistics;
+	};
+	float
+	loggingStatistics::getErrorStatistics()
+	{
+		return errorStatistics;
+	};
+	float
+	loggingStatistics::getMessageIncrement()
+	{
+		return messageIncrement;
+	};
+	float
+	loggingStatistics::getErrorIncrement()
+	{
+		return errorIncrement;
+	};
+	float
+	loggingStatistics::getActualStatisticsPeriod()
+	{
+		return actualStatisticsPeriod;
 	};
 };

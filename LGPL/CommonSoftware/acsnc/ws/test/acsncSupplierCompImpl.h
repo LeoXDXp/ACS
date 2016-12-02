@@ -63,13 +63,32 @@ class SupplierCompImpl: public virtual acscomponent::ACSComponentImpl,
      */
     virtual ~SupplierCompImpl();
     
+    static void sendEventsTh(void *arg);
+    //nc::SimpleSupplier* getSimpleSupplier(); 
+
+    int getNumEvents()
+    {
+        return m_numEvents;
+    }
+
+    void publishEvent(const acsnc::EventDescription event)
+    {
+        if(m_testSupplier_p != NULL)
+        {
+            m_testSupplier_p->publishData<acsnc::EventDescription>(event);
+        }       
+    }
 
     /* --------------------- [ CORBA interface ] ----------------------*/
     virtual void 
     sendEvents(short numEvents);
     
+    virtual void
+    testReconn1(CORBA::Boolean autoreconnect,CORBA::Boolean ncRestarted);
+    
   private:
     nc::SimpleSupplier *m_testSupplier_p;
+    int m_numEvents;
 };
 
 #endif

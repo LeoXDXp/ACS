@@ -289,8 +289,8 @@ endif #end $(strip $(XML_IDL))
         tmpFile=/tmp/acsMakeJavaStubs$(strip $1)_$(UNIQUE_NUMBER)_$(USER_NAME); \
         if [ "$$$${FILES}" != "" ] ; then \
           echo $$$${FILES} > $$$${tmpFile}; \
-          $(JAVAC) $(javaCompilerOptions) $(JAVA_EDIRS) -d $$(TMPSRC) @$$$${tmpFile} ; \
-          $(RM) $$$${tmpFile}; \
+          $(JAVAC) $(javaCompilerOptions) $(JAVA_EDIRS) -d $$(TMPSRC) @$$$${tmpFile} || { $(RM) $$$${tmpFile} && exit 3 ; } ; \
+          $(RM) $$$${tmpFile} ; \
         else \
           echo "== WARNING, no Java source files generated for $1"; \
         fi
@@ -612,7 +612,7 @@ ifdef ACSROOT
 else
 	$(AT) CLASSPATH=`acsMakeJavaClasspath`:$(INSTALL_ROOT_LAST)/lib/endorsed/xercesImpl.jar;  export CLASSPATH; java -DACS.schemaconfigfiles="" $(CASTOR)  ../idl/$1.xml $$(TMPSRC) $(MK_IDL_PATH)	
 endif #ACSROOT
-	$(AT) CLASSPATH=`acsMakeJavaClasspath`; export CLASSPATH; FILES=`find $$(TMPSRC) -name \*.java`; export FILES;  if [ "$$$${FILES}" != "" ] ; then $(JAVAC) $(javaCompilerOptions) $(JAVA_EDIRS) -d $$(TMPSRC) $$$${FILES}; fi;
+	$(AT) CLASSPATH=`acsMakeJavaClasspath`; export CLASSPATH; FILES=`find $$(TMPSRC) -name \*.java`; export FILES;  if [ "$$$${FILES}" != "" ] ; then $(JAVAC) $(javaCompilerOptions) $(JAVA_EDIRS) -d $$(TMPSRC) $$$${FILES} || exit -13 ; fi;
 ifeq ($(strip $(DEBUG)),on)
 	$(call createJar,$1, $1, $$(TMPSRC),on)
 else
@@ -846,9 +846,14 @@ $(if $5, \
 
 do_lib_$2: $($2_lib_prereq)
 
-clean_lib_$2: $($2_clean_prereq)
+clean_lib_$2: $($2_clean_prereq) clean_gcov_lib_$2
 	$(AT)$(RM) $($2_depList) $($2_expObjList)
 	$(AT) if [ -f $2-restart-da.mk ]; then $(RM) $2-restart-da.mk; fi
+
+.PHONY: clean_gcov_lib_$2
+clean_gcov_lib_$2:
+	$(AT)$(RM) $(wildcard $(patsubst %.o,%.gc*,$($2_expObjList)))
+
 
 clean_dist_lib_$2: clean_lib_$2;
 
@@ -868,9 +873,9 @@ $(CURDIR)/../lib/lib$2.$(SHLIB_EXT): $$(xyz_$2_OBJ) $$($2_lList)
 	@echo "== Making library: ../lib/lib$2.$(SHLIB_EXT)" 
 	-$(AT)$(RM) ../lib/lib$2.$(SHLIB_EXT)
 ifeq ($(platform),Cygwin)
-	$(AT)$(CXX) -shared -fPIC $$($2_sharedLibName) -Wl,--enable-auto-image-base -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc $(L_PATH) -Wl,--whole-archive $$(xyz_$2_OBJ) -Wl,--no-whole-archive $(sort $($2_libraryList)) $4 -o ../lib/lib$2.$(SHLIB_EXT)
+	$(AT)$(CXX) $(LDFLAGS_GCOV) -shared -fPIC $$($2_sharedLibName) -Wl,--enable-auto-image-base -Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc $(L_PATH) -Wl,--whole-archive $$(xyz_$2_OBJ) -Wl,--no-whole-archive $(sort $($2_libraryList)) $4 -o ../lib/lib$2.$(SHLIB_EXT)
 else
-	$(AT)$(CXX) -shared -fPIC $$($2_sharedLibName) -Wl,--copy-dt-needed-entries $(L_PATH) $4 -o ../lib/lib$2.$(SHLIB_EXT) $$(xyz_$2_OBJ) $($2_libraryList)
+	$(AT)$(CXX) $(LDFLAGS_GCOV) -shared -fPIC $$($2_sharedLibName) $(L_PATH) $($2_libraryList) $4 -o ../lib/lib$2.$(SHLIB_EXT) $$(xyz_$2_OBJ)
 endif
 	$(AT) if [ "$$$$MAKE_NOSYMBOL_CHECK" == "" ]; then acsMakeCheckUnresolvedSymbols -w ../lib/lib$2.$(SHLIB_EXT); fi 
 	$(AT) chmod a-w+x ../lib/lib$2.$(SHLIB_EXT)
@@ -1024,8 +1029,12 @@ endif
 endif
 
 .PHONY: clean_exe_$2
-clean_exe_$2: 
+clean_exe_$2: clean_gcov_exe_$2
 	$(AT)$(RM) ../bin/$2 $($2_exe_objList) $($2_exe_depList)
+
+.PHONY: clean_gcov_exe_$2
+clean_gcov_exe_$2:
+	$(AT)$(RM) $(wildcard $(patsubst %.o,%.gc*,$($2_exe_objList)))
 
 .PHONY: clean_dist_exe_$2
 clean_dist_exe_$2: clean_exe_$2;
@@ -1270,13 +1279,16 @@ define acsMakePythonPackageDependencies
 do_python_package_$1: ../lib/python/site-packages/$1;
 
 $1_python_source_files:= $(if $1,$(shell find $1  -type f ! -path '*/CVS/*' ! -path '*/.svn/*'))
-$1_python_install_files:= $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f  -name \*.py -o -name \*.def | sed -n 's/\(.*\).py$$/\1.py\n\1.pyc/p; /\.py/!p' |sort -t\. -k 2 |tr '\n' ' ' ) )
+# ICT-5703: use precedence rules of find properly
+$1_python_install_files:= $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f \( -name \*.py -o -name \*.def \) | sed -n 's/\(.*\).py$$/\1.py\n\1.pyc/p; /\.py/!p' |sort -t\. -k 2 |tr '\n' ' ' ) )
 
 LIB_SCAPE := $(LIB)/python/site-packages/
-$1_python_install_files_path := $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f  -name \*.py -o -name \*.def | sed -n 's/$(1)/$$(LIB_SCAPE)$(1)/p' | sed -n 's/\(.*\).py$$/\1.py\n\1.pyc/p; /\.py/!p' |sort -t\. -k 2 |tr '\n' ' ' ) )
+# ICT-5703: use precedence rules of find properly
+$1_python_install_files_path := $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f \( -name \*.py -o -name \*.def \) | sed -n 's/$(1)/$$(LIB_SCAPE)$(1)/p' | sed -n 's/\(.*\).py$$/\1.py\n\1.pyc/p; /\.py/!p' |sort -t\. -k 2 |tr '\n' ' ' ) )
 
 LOCAL_LIB_SCAPE := ../lib/python/site-packages/
-$1_python_install_files_path_req := $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f  -name \*.py -o -name \*.def | sed -n 's/$(1)/$$(LOCAL_LIB_SCAPE)$(1)/p' | sort -t\. -k 2 |tr '\n' ' ' ) )
+# ICT-5703: use precedence rules of find properly
+$1_python_install_files_path_req := $(if $1,$(shell find  $1 ! -path '*/.svn/*' ! -path '*/CVS/*' -type f \( -name \*.py -o -name \*.def \) | sed -n 's/$(1)/$$(LOCAL_LIB_SCAPE)$(1)/p' | sort -t\. -k 2 |tr '\n' ' ' ) )
 
 ../lib/python/site-packages/$1: OUTPUT=../lib/python/site-packages/$1
 ../lib/python/site-packages/$1: $$($1_python_source_files) Makefile
@@ -1469,81 +1481,6 @@ clean_dist_tcl_lib_$1: clean_tcl_lib_$1;
 
 
 endef
-#############################################################
-#############################################################
-errors_begin:
-	-@echo ""; echo "..ERROR files:"
-
-install_errors: errors_begin $(subst ../ERRORS,$(ERRORS),$(wildcard ../ERRORS/*_ERRORS) $(wildcard ../ERRORS/*ERRORS.IDX)) $(subst ../include,$(INCLUDE),$(wildcard ../include/*Errors.h)) $(subst ../ERRORS,$(ERRORS),$(wildcard ../ERRORS/HELP/*))
-
-############################################################
-
-$(ERRORS)/%: ../ERRORS/%
-	$(AT)cp ../ERRORS/$*  $(ERRORS)/$*
-	$(AT)chmod $(P644) $(ERRORS)/$*
-
-$(INCLUDE)/%Errors.h: ../include/%Errors.h
-	$(AT)cp ../include/$*Errors.h $(INCLUDE)/$*Errors.h
-	$(AT)chmod $(P644) $(INCLUDE)/$*Errors.h
-
-$(ERRORS)/HELP/%: ../ERRORS/HELP/%
-	$(AT)mkdir -p $(ERRORS)/HELP
-	$(AT)cp ../ERRORS/HELP/$*  $(ERRORS)/HELP/$*
-
-
-##########################################################################
-##########################################################################
-install_alarms: alarms_begin $(subst ../ALARMS,$(ALARMS),$(wildcard ../ALARMS/HELP/*))
-
-alarms_begin:
-	@echo "" &&  echo "..ALARM files:"
-
-$(ALARMS)/HELP/%: ../ALARMS/HELP/%
-	$(AT)cp ../ALARMS/HELP/$*  $(ALARMS)/HELP/$*
-	$(AT)chmod $(P644) $(ALARMS)/HELP/$*
-
-##########################################################################
-##########################################################################
-install_logs: logs_begin $(subst ../LOGS,$(LOGS),$(wildcard ../LOGS/*_LOGS))
-
-
-logs_begin:
-	-@echo ""; echo "....LOG files:"
-
-$(LOGS)/%_LOGS: ../LOGS/%_LOGS
-	$(AT)cp ../LOGS/$*_LOGS  $(LOGS)/$*_LOGS; \
-              chmod $(P644) $(LOGS)/$*_LOGS
-
-
-.PHONY: install_standardfiles
-install_standardfiles: install_alarms install_logs install_errors
-
-##########################################################################
-##########################################################################
-# acsMakePanelDependencies
-
-# write on output the rule to build the script.
-define acsMakePanelDependencies
-.PHONY: do_panel_$1
-do_panel_$1: ../bin/$1;
-
-.PHONY: clean_panel_$1
-clean_panel_$1:
-	$(AT)$(RM) ../bin/$1
-
-../bin/$1: $1.pan Makefile
-	$(AT)echo "== Making panel: ../bin/$1"
-	$(AT)cp $1.pan ../bin/$1;
-	$(AT)chmod $(P755) ../bin/$1
-
-install_panel_$1: $(BIN)/$1
-
-$(BIN)/$1: ../bin/$1
-	-$(AT)echo "\t$1"
-	$(AT)cp ../bin/$1 $(BIN)/$1
-	$(AT)chmod $(P755) $(BIN)/$1
-
-endef
 
 ##########################################################################
 ##########################################################################
@@ -1561,8 +1498,18 @@ xyz_$1_SRC = $(addsuffix .c,$2)
 
 rtai_$1_components = $(if $(and $(filter 1,$(words $2)),$(filter $1,$(word 1,$2))),,$1-objs := $(addsuffix .o,$2))
 
+# ICT-2680: kernel module must be re-built if Makefile was changed.
+# I.e. declare dependency on Makefile and clean-up Kbuild environment (otherwise
+# the kernel module components will not be re-compiled, as Kbuild doesn't know 
+# about a dependency on Makefile)
 #.NOTPARALLEL:../rtai/$(kernel_install_subfold)/$1.ko
-../rtai/$(kernel_install_subfold)/$1.ko: $$(xyz_$1_SRC) ../bin/installLKM-$1
+CPU := $(shell uname -p)
+../rtai/$(kernel_install_subfold)/$1.ko: $$(xyz_$1_SRC) ../bin/installLKM-$1 Makefile
+ifeq ($(CPU),x86_64)
+	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCRTAI) RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) clean ; fi
+else
+	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCRTAI) ARCH=i386 RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) clean ; fi
+endif
 	@$(ECHO) "== Making RTAI Module: $1" 
 # here we have to generate the hineous Kbuild file
 	$(AT)lockfile -s 2 -r 10 Kbuild.lock || echo "WARNING, ignoring lock Kbuild.lock"
@@ -1573,17 +1520,29 @@ rtai_$1_components = $(if $(and $(filter 1,$(words $2)),$(filter $1,$(word 1,$2)
 	$(AT)$(ECHO) "EXTRA_CFLAGS := $(EXTRA_CFLAGS)" >> Kbuild
 	$(AT)$(ECHO) "KBUILD_EXTRA_SYMBOLS=\"$(RTAI_HOME)/modules/Module.symvers\"" >> Kbuild
 ifdef MAKE_VERBOSE
+ifeq ($(CPU),x86_64)
+	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCRTAI) RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) V=2 modules
+else
 	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCRTAI) ARCH=i386 RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) V=2 modules
+endif
+else
+ifeq ($(CPU),x86_64)
+	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCRTAI) RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) V=0 modules
 else
 	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCRTAI) ARCH=i386 RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) V=0 modules
+endif
 endif
 	$(AT)$(RM) Kbuild.lock
 	$(AT)mv $1.ko ../rtai/$(kernel_install_subfold)
 
 # LKM Support binaries
 .PHONY: clean_rtai_$1
-clean_rtai_$1:
+clean_rtai_$1i:
+ifeq ($(CPU),x86_64)
+	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCRTAI) RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) clean ; fi
+else
 	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCRTAI) ARCH=i386 RTAI_CONFIG=$(RTAI_CONFIG) M=$(PWD) clean ; fi
+endif
 	$(AT)$(RM) ../rtai/$(kernel_install_subfold)/$1.ko $(addprefix ../object/,$(addsuffix .o,$2)) Kbuild.lock ../bin/installLKM-$1
 
 #../bin/installLKM-$1: 
@@ -1659,9 +1618,14 @@ xyz_$1_SRC = $(addsuffix .c,$2)
 
 kernel_module_$1_components = $(if $(and $(filter 1,$(words $2)),$(filter $1,$(word 1,$2))),,$1-objs := $(addsuffix .o,$2))
 
+# ICT-2680: kernel module must be re-built if Makefile was changed.
+# I.e. declare dependency on Makefile and clean-up Kbuild environment (otherwise
+# the kernel module components will not be re-compiled, as Kbuild doesn't know 
+# about a dependency on Makefile)
 #.NOTPARALLEL:../kernel/$(kernel_install_subfold)/$1.ko
-../kernel/$(kernel_install_subfold)/$1.ko: $$(xyz_$1_SRC) ../bin/installLKM-$1
+../kernel/$(kernel_install_subfold)/$1.ko: $$(xyz_$1_SRC) ../bin/installLKM-$1 Makefile
 	@$(ECHO) "== Making KERNEL Module: $1" 
+	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCKERNEL) M=$(PWD) clean ; fi
 # here we have to generate the hineous Kbuild file
 	$(AT)lockfile -s 2 -r 10 Kbuild.lock || echo "WARNING, ignoring lock Kbuild.lock"
 	$(AT)$(ECHO) "obj-m += $1.o" > Kbuild
@@ -1670,18 +1634,20 @@ kernel_module_$1_components = $(if $(and $(filter 1,$(words $2)),$(filter $1,$(w
 	$(AT)$(ECHO) "USR_INC := $(USR_INC)"   >> Kbuild
 	$(AT)$(ECHO) "EXTRA_CFLAGS := $(EXTRA_CFLAGS)" >> Kbuild
 	$(AT)$(ECHO) "KBUILD_EXTRA_SYMBOLS=\"$(LINUX_HOME)/modules/Module.symvers\"" >> Kbuild
+# ICT-2680: remove "ARCH=i386" from list of compilation flags for plain linux kernel modules
 ifdef MAKE_VERBOSE
-	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCKERNEL) ARCH=i386 M=$(PWD) V=2 modules
+	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCKERNEL) M=$(PWD) V=2 modules
 else
-	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCKERNEL) ARCH=i386 M=$(PWD) V=0 modules
+	+$(AT)$(MAKE) -C $(KDIR) CC=$(CCKERNEL) M=$(PWD) V=0 modules
 endif
 	$(AT)$(RM) Kbuild.lock
 	$(AT)mv $1.ko ../kernel/$(kernel_install_subfold)
 
 # LKM Support binaries
 .PHONY: clean_kernel_module_$1
+# ICT-2680: remove "ARCH=i386" from list of compilation flags for plain linux kernel modules
 clean_kernel_module_$1:
-	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCKERNEL) ARCH=i386 M=$(PWD) clean ; fi
+	+$(AT)if [ -f Kbuild ]; then $(MAKE) -C $(KDIR) CC=$(CCKERNEL) M=$(PWD) clean ; fi
 	$(AT)$(RM) ../kernel/$(kernel_install_subfold)/$1.ko $(addprefix ../object/,$(addsuffix .o,$2)) Kbuild.lock ../bin/installLKM-$1
 
 #The following works on an STE

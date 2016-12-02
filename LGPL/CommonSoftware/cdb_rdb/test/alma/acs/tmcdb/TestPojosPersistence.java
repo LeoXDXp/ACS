@@ -40,7 +40,6 @@ import junit.framework.TestCase;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.jdbc.Work;
 
@@ -86,7 +85,7 @@ public class TestPojosPersistence extends TestCase {
 //		hibernateLoggerFactory.getLogger("blabla").info("Greetings from your hibernate logger");
 		
 		hibernateUtil = HibernateUtil.getInstance(logger);
-		hibernateUtil.setConfiguration(new AnnotationConfiguration().configure("test-hibernate.cfg.xml"));
+		hibernateUtil.setConfiguration(new org.hibernate.cfg.Configuration().configure("test-hibernate.cfg.xml"));
 		hibernateUtil.getSessionFactory().openSession();
 	}
 
@@ -97,13 +96,11 @@ public class TestPojosPersistence extends TestCase {
 		ClientLogManager.getAcsLogManager().shutdown(true);
 	}
 	
-	public void testCreateDB() throws Exception {
+	public void testCreateDrop() throws Exception {
 		createDB();
-	}
-
-	public void testDrop() throws Exception {
 		dropDB();
 	}
+
 
 	public void testSimpleSave() throws Exception {
 
@@ -132,6 +129,7 @@ public class TestPojosPersistence extends TestCase {
 				fail("Duplicated PK allowed!"); // Should fail, TMCDB already contains a "TMCDB" record
 			} catch(HibernateUtilException e) {
 				hibernateUtil.rollbackTransaction();
+				hibernateUtil.getSession().clear();
 			}
 
 			Configuration config = new Configuration();
@@ -456,7 +454,7 @@ public class TestPojosPersistence extends TestCase {
 		comp.setConfiguration(config);
 		comp.setXMLDoc("Something that is not XML");
 		comp.setRealTime(true);
-		comp.setImplLang(ComponentImplLang.JAVA);
+		comp.setImplLang(ImplLangEnum.JAVA);
 		comp.setIsAutostart(true);
 		comp.setIsDefault(false);
 		comp.setIsControl(true);

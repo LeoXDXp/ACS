@@ -39,23 +39,30 @@ testChannelCreation_OBJECTS =	testChannelCreation
 testChannelCreation_LIBS    =	acsnc maciClient acsncHelperTest
 
 
-SCRIPTS_L       = acsncTATRunTest.sh
+SCRIPTS_L       = acsncTATRunTest.sh acsncNslist.sh acsncExecDelChannelsNS.sh acsncCreateNamedNotifyS.sh acsncKillNamedNotifyS.sh
 
-PY_SCRIPTS_L =	acsncTestConSup acsncTestSimpleComponent
+PY_SCRIPTS_L =	acsncTestConSup acsncTestSimpleComponent acsncTestSupReconn acsncRunConComp acsncRunSupComp acsncRunMConComp acsncTestMThSup
 
 # Includes (.h) files (public and local)
 # ---------------------------------
 INCLUDES        = 
-INCLUDES_L      = acsncConsumerCompImpl.h acsncSupplierCompImpl.h
+INCLUDES_L      = acsncConsumerCompImpl.h acsncSupplierCompImpl.h acsncConCompImpl.h acsncSupCompImpl.h
 
 # Libraries (public and local)
 # ----------------------------
-LIBRARIES       = acsncConsumerCompImpl acsncSupplierCompImpl acsncRTSupplierCompImpl \
+LIBRARIES       = acsncConsumerCompImpl acsncSupplierCompImpl acsncRTSupplierCompImpl acsncMThSupplierCompImpl \
 		acsncArchiveConsumerCompImpl \
 		testCDBProps  \
 		acsncConsumerILCompImpl acsncSupplierILCompImpl \
-        acsncHelperTest
+		acsncConsumerNamedChCompImpl acsncSupplierNamedChCompImpl \
+        acsncHelperTest acsncConCompImpl acsncSupCompImpl 
 LIBRARIES_L     = 
+
+acsncSupCompImpl_OBJECTS = acsncSupCompImpl
+acsncSupCompImpl_LIBS = EventComponentStubs acsnc acscomponent
+
+acsncConCompImpl_OBJECTS = acsncConCompImpl
+acsncConCompImpl_LIBS = EventComponentStubs acsnc acscomponent
 
 acsncHelperTest_OBJECTS = acsncHelperTest
 acsncHelperTest_LIBS = acsnc
@@ -70,6 +77,9 @@ acsncConsumerCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 acsncConsumerILCompImpl_OBJECTS = acsncConsumerILCompImpl
 acsncConsumerILCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 
+acsncConsumerNamedChCompImpl_OBJECTS = acsncConsumerNamedChCompImpl
+acsncConsumerNamedChCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
+
 acsncArchiveConsumerCompImpl_OBJECTS = acsncArchiveConsumerCompImpl
 acsncArchiveConsumerCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 
@@ -79,12 +89,20 @@ acsncSupplierCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 acsncSupplierILCompImpl_OBJECTS = acsncSupplierILCompImpl
 acsncSupplierILCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 
+acsncSupplierNamedChCompImpl_OBJECTS = acsncSupplierNamedChCompImpl
+acsncSupplierNamedChCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
+
 acsncRTSupplierCompImpl_OBJECTS = acsncRTSupplierCompImpl
 acsncRTSupplierCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 
+acsncMThSupplierCompImpl_OBJECTS = acsncMThSupplierCompImpl
+acsncMThSupplierCompImpl_LIBS    = EventComponentStubs acsnc acscomponent
 
-IDL_FILES = EventComponent
+
+
+IDL_FILES = EventComponent 
 EventComponentStubs_LIBS = acscomponentStubs
+
 
 # list of all possible C-sources (used to create automatic dependencies)
 # ------------------------------
