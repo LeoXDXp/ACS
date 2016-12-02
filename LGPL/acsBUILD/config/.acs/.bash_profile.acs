@@ -588,6 +588,9 @@ then
         then
             JAVA_HOME="/usr/lib/jvm/java-8-openjdk-i386"
         fi
+    elif [ "$DISTRO" = "CENTOS" ]
+    then
+        JAVA_HOME="/usr/lib/jvm/java-1.8.0"
     else
       	JAVA_HOME=/usr/java/default
     fi
