@@ -6,8 +6,8 @@
 #          acsutilTATTestRunner acsexmplClient
 
 #determine the ACS instance
-export ACS_INSTANCE=`cat $ACS_TMP/acs_instance` 
-
+#export ACS_INSTANCE=`cat $ACS_TMP/acs_instance` 
+# ACS INSTANCE already a env var
 if [ "$ACS_INSTANCE" = "" ]
 then
     echo "Could not determine the ACS_INSTANCE!"
