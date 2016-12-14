@@ -47,9 +47,9 @@ endef
 # I skip doxygen, that should be after compat and before tat,
 # because it is already built in the prepare phase.
 #
-
-MODULES_TOOLS = emacs tat expat loki extjars antlr hibernate extpy cppunit getopt astyle swig xercesc xercesj castor xsddoc extidl vtd-xml oAW shunit2 log4cpp scxml_apache
-# tat extjars getopt astyle xercesc xercesj xsddoc extidl vtd-xml oAW  scxml_apache -> Tools aun no integradas a rpm
+ 
+#emacs tat expat loki extjars antlr hibernate extpy cppunit getopt astyle swig xercesc xercesj castor xsddoc extidl vtd-xml oAW shunit2 log4cpp scxml_apache
+MODULES_TOOLS = tat extjars getopt xercesc xercesj xsddoc extidl vtd-xml oAW  scxml_apache # -> Tools aun no integradas a rpm
 
 
 SUBSYSTEM = "Tools"
