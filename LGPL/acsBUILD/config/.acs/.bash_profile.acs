@@ -492,10 +492,10 @@ fi
 
 # set the following variable to the path where you installed your TAO 
 # stuff:
-if [ X"$ACE_ROOT_DIR" = X ] || [ X"$ACS_RETAIN" = X ]
-then
-   ACE_ROOT_DIR=$ALMASW_INSTDIR/TAO/ACE_wrappers/build
-fi
+#if [ X"$ACE_ROOT_DIR" = X ] || [ X"$ACS_RETAIN" = X ]
+#then
+#   ACE_ROOT_DIR=$ALMASW_INSTDIR/TAO/ACE_wrappers/build
+#fi
 
 #Set the variables for OpenDDS
 if [ X"$DDS_ROOT_DIR" = X ] || [ X"$ACS_RETAIN" = X ]
@@ -516,12 +516,12 @@ then
     fi
 elif [ "$OSYSTEM" = "Linux" ]
 then
-    ACE_ROOT=$ACE_ROOT_DIR/linux
+    ACE_ROOT="" #$ACE_ROOT_DIR/linux
     DDS_ROOT=$DDS_ROOT_DIR/linux
-    if [ X"$ACS_STARTUP_TIMEOUT_MULTIPLIER" = X ]
-    then
-       ACS_STARTUP_TIMEOUT_MULTIPLIER=2
-    fi
+#    if [ X"$ACS_STARTUP_TIMEOUT_MULTIPLIER" = X ]
+#    then
+#       ACS_STARTUP_TIMEOUT_MULTIPLIER=2
+#    fi
 elif [ "$OSYSTEM" = "$CYGWIN_VER" ]
 then
     ACE_ROOT=$ALMASW_INSTDIR/TAO/ACE_wrappers
