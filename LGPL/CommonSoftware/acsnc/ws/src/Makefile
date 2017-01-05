@@ -58,7 +58,7 @@ INCLUDES_L	=
 # Libraries (public and local)
 # ----------------------------
 LIBRARIES       = acsnc
-LIBRARIES_L     =
+LIBRARIES_L     = /usr/local/lib64/
 
 acsnc_OBJECTS  = acsncCDBProperties \
                  acsncArchiveConsumer \
