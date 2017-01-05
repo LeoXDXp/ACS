@@ -28,7 +28,7 @@
 
 # user definable C-compilation flags
 USER_CFLAGS =
-USER_LIB    = /usr/include/orbsvcs/
+USER_LIB    = -I /usr/include/orbsvcs/ -L /usr/local/lib64/
 
 DEBUG=on
 
