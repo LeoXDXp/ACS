@@ -26,7 +26,7 @@ DEBUG=on
 
 #
 # additional include and library search paths
-USER_INC = -I$(PYTHONINC)
+USER_INC = -I$(PYTHONINC) -I/usr/include/orbsvcs/ -I/usr/src/debug/ACE_wrappers/TAO/
 #USER_LIB = 
 
 #
