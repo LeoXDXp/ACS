@@ -44,8 +44,9 @@ acsncDelChannelsInNameS --name_service $ACS_NAME_SERVICE --notify_service "$HOST
 # I need to cd to $ACE_ROOT/TAO/orbsvcs/Notify_Service
 # in order to get the correct svc.conf service configuration file.
 STARTUP_DIR=$PWD
-cd $ACE_ROOT/TAO/orbsvcs/Notify_Service
-($ACE_ROOT/TAO/orbsvcs/Notify_Service/tao_cosnotification -ORBEndpoint iiop://$HOST:$NOTIFY_SERVICE_PORT -ORBInitRef NameService=$ACS_NAME_SERVICE -IORoutput $NOTIFY_IOR $ORBOPTS -Boot 2>&1 & echo $! > $NOTIFY_SERVICE_PIDFILE) | tee $NOTIFY_OUT &
+#cd $ACE_ROOT/TAO/orbsvcs/Notify_Service
+#($ACE_ROOT/TAO/orbsvcs/Notify_Service/tao_cosnotification -ORBEndpoint iiop://$HOST:$NOTIFY_SERVICE_PORT -ORBInitRef NameService=$ACS_NAME_SERVICE -IORoutput $NOTIFY_IOR $ORBOPTS -Boot 2>&1 & echo $! > $NOTIFY_SERVICE_PIDFILE) | tee $NOTIFY_OUT &
+tao-cosnotification -ORBEndpoint iiop://$HOST:$NOTIFY_SERVICE_PORT -ORBInitRef NameService=$ACS_NAME_SERVICE -IORoutput $NOTIFY_IOR $ORBOPTS -Boot 2>&1 & echo $! > $NOTIFY_SERVICE_PIDFILE) | tee $NOTIFY_OUT &
 cd $STARTUP_DIR
 
 # Block until the IOR shows up in the the correct file
@@ -66,4 +67,5 @@ then
 fi
 
 # Register Monitor and Control Notify Service extension to the naming service
-$ACE_ROOT/bin/tao_nsadd --ns $ACS_NAME_SERVICE --rebind --name MC_${CL_NS_TYPE}NotifyEventChannelFactory --ior `cat $INSTANCE_DIR/iors/${CL_NS_TYPE}NotifyMCIOR` 2>&1 | tee $NOTIFY_OUT
+#$ACE_ROOT/bin/tao_nsadd --ns $ACS_NAME_SERVICE --rebind --name MC_${CL_NS_TYPE}NotifyEventChannelFactory --ior `cat $INSTANCE_DIR/iors/${CL_NS_TYPE}NotifyMCIOR` 2>&1 | tee $NOTIFY_OUT
+tao_nsadd --ns $ACS_NAME_SERVICE --rebind --name MC_${CL_NS_TYPE}NotifyEventChannelFactory --ior `cat $INSTANCE_DIR/iors/${CL_NS_TYPE}NotifyMCIOR` 2>&1 | tee $NOTIFY_OUT
