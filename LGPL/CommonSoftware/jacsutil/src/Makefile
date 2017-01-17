@@ -70,7 +70,7 @@ endif
 #else
 #   SEPARATOR=:
 #endif
-CLASSPATH := $(JAVA_HOME)/lib/tools.jar$(PATH_SEP)$(CLASSPATH)$(PATH_SEP).
+CLASSPATH := $(JAVA_HOME)/lib/tools.jar:$(CLASSPATH)
 
 #
 # TARGETS
